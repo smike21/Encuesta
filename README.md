@@ -1,13 +1,14 @@
-# Página de Encuestas — Laravel
+# Página de Encuestas
 
-Migración de la aplicación Flask del archivo original a Laravel. Incluye panel de administración, creación y activación de encuestas, preguntas de texto/párrafo/opción múltiple/escala, respuestas, resultados y ubicación opcional.
+Aplicación Laravel para crear, responder y analizar encuestas. Incluye administración, preguntas de texto/párrafo/opción múltiple/escala, resultados y ubicación opcional.
 
-## Instalación
+## Despliegue en Railway
 
-1. Instala PHP 8.2+, Composer y una base de datos MySQL (o usa SQLite).
-2. En PowerShell, desde esta carpeta, ejecuta `./install.ps1`.
-3. Para MySQL, edita el archivo `.env` creado dentro de `pagina-encuestas` con tus credenciales antes de `php artisan migrate`.
-4. Ejecuta `php artisan serve` y abre la dirección indicada.
-5. Abre `/admin/setup` una sola vez. Crea el acceso inicial: `admin@encuestas.test` / `admin123`. Inicia sesión en `/admin/login` y cambia esa clave en una futura mejora.
+1. Crea un servicio MySQL y conéctalo a este servicio mediante referencias de variables.
+2. Configura `APP_KEY`, `APP_ENV=production`, `APP_DEBUG=false`, `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD`.
+3. Railway ejecuta las migraciones y arranca Laravel automáticamente mediante `railway.json`.
+4. Después del primer despliegue, visita `/admin/setup` una única vez. El acceso inicial es `admin@encuestas.test` / `admin123`.
 
-El script crea la base oficial de Laravel y copia encima esta migración. No incluye `vendor/` porque Composer lo genera automáticamente.
+## Local
+
+Requiere PHP 8.2+ y Composer. Ejecuta `composer install`, copia `.env.example` a `.env`, configura la base de datos y ejecuta `php artisan key:generate`, `php artisan migrate` y `php artisan serve`.
