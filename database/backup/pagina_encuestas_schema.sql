@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   remember_token VARCHAR(100) NULL,
   is_admin TINYINT(1) NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL,
   PRIMARY KEY (id), UNIQUE KEY users_email_unique (email)
@@ -66,6 +67,14 @@ CREATE TABLE IF NOT EXISTS answers (
   value TEXT NOT NULL, created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL, PRIMARY KEY (id),
   CONSTRAINT answers_question_id_foreign FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
   CONSTRAINT answers_submission_id_foreign FOREIGN KEY (submission_id) REFERENCES survey_submissions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS survey_user_accesses (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, survey_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL,
+  created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL, PRIMARY KEY (id),
+  UNIQUE KEY survey_user_accesses_survey_id_user_id_unique (survey_id, user_id),
+  CONSTRAINT survey_user_accesses_survey_id_foreign FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE,
+  CONSTRAINT survey_user_accesses_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -20,7 +20,7 @@ class AdminController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
-        if (Auth::attempt($credentials, $request->boolean('remember'))) { $request->session()->regenerate(); return redirect()->intended(route('admin.dashboard')); }
+        if (Auth::attempt($credentials + ['is_active' => true], $request->boolean('remember'))) { $request->session()->regenerate(); return redirect()->intended(Auth::user()->is_admin ? route('admin.dashboard') : route('surveyor.dashboard')); }
         return back()->withErrors(['email' => 'Las credenciales no son válidas.'])->onlyInput('email');
     }
     public function logout(Request $request): RedirectResponse { Auth::logout(); $request->session()->invalidate(); $request->session()->regenerateToken(); return redirect()->route('admin.login'); }
@@ -35,6 +35,38 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Encuesta creada exitosamente.');
     }
     public function results(Survey $survey): View { $this->guard(); $survey->load(['questions.answers', 'submissions']); return view('admin.results', compact('survey')); }
+    public function surveyors(): View
+    {
+        $this->guard();
+        $surveyors = User::where('is_admin', false)->with(['assignedSurveys' => fn ($query) => $query->withCount('submissions')])->withCount('assignedSurveys')->orderBy('name')->get();
+        return view('admin.surveyors.index', compact('surveyors'));
+    }
+    public function createSurveyor(): View { $this->guard(); return view('admin.surveyors.create'); }
+    public function storeSurveyor(Request $request): RedirectResponse
+    {
+        $this->guard();
+        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'max:255', 'unique:users,email'], 'password' => ['required', 'string', 'min:8', 'confirmed']]);
+        User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => $data['password'], 'is_admin' => false, 'is_active' => true]);
+        return redirect()->route('admin.surveyors')->with('success', 'Cuenta de encuestador creada.');
+    }
+    public function surveyorAccess(User $user): View
+    {
+        $this->guard(); abort_if($user->is_admin, 404);
+        return view('admin.surveyors.access', ['surveyor' => $user, 'surveys' => Survey::withCount('submissions')->latest()->get(), 'assignedIds' => $user->assignedSurveys()->pluck('surveys.id')->all()]);
+    }
+    public function updateSurveyorAccess(Request $request, User $user): RedirectResponse
+    {
+        $this->guard(); abort_if($user->is_admin, 404);
+        $data = $request->validate(['surveys' => ['nullable', 'array'], 'surveys.*' => ['integer', 'exists:surveys,id']]);
+        $user->assignedSurveys()->sync($data['surveys'] ?? []);
+        return redirect()->route('admin.surveyors')->with('success', 'Permisos de resultados actualizados.');
+    }
+    public function toggleSurveyor(User $user): RedirectResponse
+    {
+        $this->guard(); abort_if($user->is_admin, 404);
+        $user->update(['is_active' => ! $user->is_active]);
+        return back()->with('success', $user->is_active ? 'Cuenta habilitada.' : 'Cuenta inhabilitada.');
+    }
     public function export(Survey $survey): StreamedResponse
     {
         $this->guard();

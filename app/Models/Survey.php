@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Survey extends Model
 {
@@ -18,4 +19,5 @@ class Survey extends Model
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
     public function questions(): HasMany { return $this->hasMany(Question::class)->orderBy('position'); }
     public function submissions(): HasMany { return $this->hasMany(SurveySubmission::class); }
+    public function surveyors(): BelongsToMany { return $this->belongsToMany(User::class, 'survey_user_accesses')->withTimestamps(); }
 }
