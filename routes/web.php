@@ -14,6 +14,7 @@ Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboa
 Route::get('/admin/encuestas/crear', [AdminController::class, 'create'])->name('admin.create');
 Route::post('/admin/encuestas', [AdminController::class, 'store'])->name('admin.store');
 Route::get('/admin/encuestas/{survey}/resultados', [AdminController::class, 'results'])->name('admin.results');
+Route::get('/admin/encuestas/{survey}/exportar', [AdminController::class, 'export'])->name('admin.export');
 Route::patch('/admin/encuestas/{survey}/estado', [AdminController::class, 'toggle'])->name('admin.toggle');
 Route::delete('/admin/encuestas/{survey}', [AdminController::class, 'destroy'])->name('admin.destroy');
 Route::get('/admin/setup', [AdminController::class, 'setup'])->name('admin.setup');

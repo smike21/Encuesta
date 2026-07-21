@@ -27,8 +27,20 @@ class SurveyController extends Controller
         abort_unless($survey->is_active, 404);
         $questions = $survey->questions;
         $rules = $questions->mapWithKeys(fn ($question) => ["answers.{$question->id}" => ['required', 'string']])->all();
-        $data = $request->validate($rules + ['latitude' => ['nullable', 'numeric', 'between:-90,90'], 'longitude' => ['nullable', 'numeric', 'between:-180,180']]);
-        $submission = SurveySubmission::create(['survey_id' => $survey->id, 'ip_address' => $request->ip(), 'latitude' => $survey->collect_location ? ($data['latitude'] ?? null) : null, 'longitude' => $survey->collect_location ? ($data['longitude'] ?? null) : null]);
+        $data = $request->validate($rules + [
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'timezone' => ['nullable', 'string', 'max:100'],
+            'locale' => ['nullable', 'string', 'max:20'],
+        ]);
+        $submission = SurveySubmission::create([
+            'survey_id' => $survey->id,
+            'ip_address' => $request->ip(),
+            'latitude' => $survey->collect_location ? ($data['latitude'] ?? null) : null,
+            'longitude' => $survey->collect_location ? ($data['longitude'] ?? null) : null,
+            'timezone' => $data['timezone'] ?? null,
+            'locale' => $data['locale'] ?? null,
+        ]);
         foreach ($questions as $question) Answer::create(['question_id' => $question->id, 'submission_id' => $submission->id, 'value' => $data['answers'][$question->id]]);
         return redirect()->route('surveys.index')->with('success', '¡Gracias por completar la encuesta!');
     }

@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -32,6 +36,34 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Encuesta creada exitosamente.');
     }
     public function results(Survey $survey): View { $this->guard(); $survey->load(['questions.answers', 'submissions']); return view('admin.results', compact('survey')); }
+    public function export(Survey $survey): StreamedResponse
+    {
+        $this->guard();
+        $survey->load(['questions', 'submissions.answers']);
+        $book = new Spreadsheet();
+        $sheet = $book->getActiveSheet();
+        $sheet->setTitle('Resultados');
+        $headers = ['N° respuesta', 'Fecha y hora Perú', 'Zona horaria local', 'País / zona', 'Ubicación'];
+        foreach ($survey->questions as $question) $headers[] = $question->text;
+        $sheet->fromArray($headers, null, 'A1');
+        $lastColumn = Coordinate::stringFromColumnIndex(count($headers));
+        $sheet->getStyle('A1:'.$lastColumn.'1')->getFont()->setBold(true);
+        foreach ($survey->submissions as $index => $submission) {
+            $answerValues = $submission->answers->keyBy('question_id');
+            $row = [
+                $index + 1,
+                $submission->created_at->copy()->timezone('America/Lima')->format('Y-m-d H:i:s'),
+                $submission->timezone ?: 'No registrada',
+                $submission->countryLabel(),
+                $submission->latitude !== null ? $submission->latitude.', '.$submission->longitude : 'No disponible',
+            ];
+            foreach ($survey->questions as $question) $row[] = $answerValues->get($question->id)?->value ?? '';
+            $sheet->fromArray($row, null, 'A'.($index + 2));
+        }
+        for ($column = 1; $column <= count($headers); $column++) $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($column))->setAutoSize(true);
+        $filename = 'resultados-'.str($survey->title)->slug().'.xlsx';
+        return response()->streamDownload(function () use ($book) { (new Xlsx($book))->save('php://output'); }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
     public function toggle(Survey $survey): RedirectResponse { $this->guard(); $survey->update(['is_active' => ! $survey->is_active]); return back()->with('success', 'Estado de la encuesta actualizado.'); }
     public function destroy(Survey $survey): RedirectResponse { $this->guard(); $survey->delete(); return back()->with('success', 'Encuesta eliminada.'); }
     public function setup(): RedirectResponse
