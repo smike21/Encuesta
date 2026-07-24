@@ -12,8 +12,9 @@ WORKDIR /app
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
-    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
-    && chmod -R ug+rwx storage bootstrap/cache
+    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/app/public/survey-images \
+    && chmod -R ug+rwx storage bootstrap/cache \
+    && php artisan storage:link
 
 ENV PORT=8080
 EXPOSE 8080
