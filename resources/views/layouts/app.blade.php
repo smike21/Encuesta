@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Página de Encuestas')</title>
     <style>
         :root { --ink:#3d2516; --muted:#7b6253; --cream:#fff7ef; --paper:#fffdfa; --orange:#b95712; --orange-dark:#8e3d08; --line:#ead8c7; --shadow:0 18px 42px rgba(103,53,18,.12); }

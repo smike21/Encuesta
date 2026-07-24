@@ -344,16 +344,27 @@
 
     // Toggle controls and show previews for newly created question/option inputs
     document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('add-question-images-btn')) {
-            const q = e.target.dataset.questionIndex;
+        const questionButton = e.target.closest('.add-question-images-btn');
+        if (questionButton) {
+            const q = questionButton.dataset.questionIndex;
             const ctrl = document.querySelector(`.question-image-controls[data-question-index="${q}"]`);
             if (ctrl) ctrl.hidden = !ctrl.hidden;
+            return;
         }
-        if (e.target.classList.contains('add-image-btn')) {
-            const q = e.target.dataset.questionIndex;
-            const opt = e.target.dataset.optionIndex;
+
+        const optionButton = e.target.closest('.add-image-btn');
+        if (optionButton) {
+            const q = optionButton.dataset.questionIndex;
+            const opt = optionButton.dataset.optionIndex;
             const container = document.querySelector(`.option-image-container[data-question-index="${q}"][data-option-index="${opt}"]`);
-            if (container) container.hidden = !container.hidden;
+            if (container) {
+                container.hidden = !container.hidden;
+                if (!container.hidden) {
+                    const input = container.querySelector('.option-file-input');
+                    if (input) input.click();
+                }
+            }
+            return;
         }
     });
 
