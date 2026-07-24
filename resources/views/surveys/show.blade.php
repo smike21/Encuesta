@@ -34,7 +34,7 @@
                 @if(!empty($question->question_images))
                     <div class="question-media-grid">
                         @foreach($question->question_images as $imagePath)
-                            <img src="{{ Storage::disk('public')->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item">
+                            <img src="{{ asset('storage/' . ltrim($imagePath, '/')) }}" alt="Imagen de pregunta" class="question-media-item">
                         @endforeach
                     </div>
                 @endif
@@ -47,7 +47,7 @@
                             <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" required>
                             <label class="form-check-label" for="q{{ $question->id }}o{{ $index }}">{{ $option }}</label>
                             @if(!empty($question->option_images[$index] ?? null))
-                                <img src="{{ Storage::disk('public')->url($question->option_images[$index]) }}" alt="Imagen de opción" class="option-media-item">
+                                <img src="{{ asset('storage/' . ltrim($question->option_images[$index], '/')) }}" alt="Imagen de opción" class="option-media-item">
                             @endif
                         </div>
                     @endforeach

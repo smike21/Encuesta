@@ -27,70 +27,18 @@
 @endsection
 @push('styles')
 <style>
-    .question-card {
-        background: #fffdfb;
-    }
-
-    .question-card .question-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .question-card .question-top .title-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        padding: .35rem .7rem;
-        border-radius: 999px;
-        background: #fff1e4;
-        color: #8e3d08;
-        font-size: .78rem;
-        font-weight: 800;
-    }
-
-    .options-editor {
-        border: 1px solid #ead8c7;
-        border-radius: 16px;
-        padding: 1rem;
-        background: #fff8f2;
-        margin-bottom: 1rem;
-    }
-
-    .options-list {
-        display: grid;
-        gap: .6rem;
-    }
-
-    .option-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: .6rem;
-        align-items: center;
-    }
-
-    .option-row input {
-        width: 100%;
-    }
-
-    .option-pill {
-        border: 0;
-        background: #fff;
-        border: 1px solid #dfc8b6;
-        border-radius: 10px;
-        padding: .55rem .8rem;
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-        font: inherit;
-        color: #8e3d08;
-        cursor: pointer;
-    }
-
-    .option-pill--danger {
-        color: #9a2020;
-    }
+    .question-card { background: #fffdfb; }
+    .question-card .question-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .question-card .question-top .title-chip { display:inline-flex; align-items:center; gap:.45rem; padding:.35rem .7rem; border-radius:999px; background:#fff1e4; color:#8e3d08; font-size:.78rem; font-weight:800; }
+    .options-editor { border:1px solid #ead8c7; border-radius:16px; padding:1rem; background:#fff8f2; margin-bottom:1rem; }
+    .options-list { display:grid; gap:.65rem; }
+    .option-row { display:grid; grid-template-columns:1fr auto; gap:.6rem; align-items:start; }
+    .option-row input { width:100%; }
+    .option-pill { border:0; background:#fff; border:1px solid #dfc8b6; border-radius:10px; padding:.55rem .8rem; display:inline-flex; align-items:center; gap:.45rem; font:inherit; color:#8e3d08; cursor:pointer; }
+    .option-pill--danger { color:#9a2020; }
+    .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
+    .option-file-input { display:none; }
+    .option-file-label { min-width:140px; }
 </style>
 @endpush
 @push('scripts')
@@ -101,18 +49,25 @@
     function setOptionVisibility(questionIndex, isMultiple) {
         const optionsEditor = document.querySelector(`[data-options-editor="${questionIndex}"]`);
         const optionImages = document.querySelector(`[data-option-images="${questionIndex}"]`);
-        const shouldShow = isMultiple;
-
-        if (optionsEditor) optionsEditor.hidden = !shouldShow;
-        if (optionImages) optionImages.hidden = !shouldShow;
+        if (optionsEditor) optionsEditor.hidden = !isMultiple;
+        if (optionImages) optionImages.hidden = !isMultiple;
     }
 
     function addOption(questionIndex) {
         const list = document.querySelector(`[data-options-list="${questionIndex}"]`);
+        const optionIndex = list.querySelectorAll('.option-row').length;
         const row = document.createElement('div');
         row.className = 'option-row';
         row.innerHTML = `
-            <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
+            <div>
+                <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
+                <div class="option-media-wrap">
+                    <label class="option-pill option-file-label">
+                        <span>🖼️ Poner imagen</span>
+                        <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
+                    </label>
+                </div>
+            </div>
             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
         `;
         list.appendChild(row);
@@ -147,11 +102,27 @@
                     </div>
                     <div class="options-list" data-options-list="${i}">
                         <div class="option-row">
-                            <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
+                            <div>
+                                <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
+                                <div class="option-media-wrap">
+                                    <label class="option-pill option-file-label">
+                                        <span>🖼️ Poner imagen</span>
+                                        <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][0]">
+                                    </label>
+                                </div>
+                            </div>
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
                         </div>
                         <div class="option-row">
-                            <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
+                            <div>
+                                <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
+                                <div class="option-media-wrap">
+                                    <label class="option-pill option-file-label">
+                                        <span>🖼️ Poner imagen</span>
+                                        <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][1]">
+                                    </label>
+                                </div>
+                            </div>
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
                         </div>
                     </div>
@@ -165,8 +136,7 @@
 
                 <div class="mb-2" data-option-images="${i}" hidden>
                     <label class="form-label">Imágenes por opción</label>
-                    <input type="file" class="form-control" accept="image/*" multiple name="questions[${i}][option_images][]">
-                    <small class="text-muted">Se emparejan en el mismo orden que las opciones.</small>
+                    <small class="text-muted d-block">Cada opción ya trae su propio botón “Poner imagen”.</small>
                 </div>
             </div>
         `);
