@@ -40,7 +40,7 @@
                                     <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="{{ $question->id }}">
                                     <span class="form-check-label">¿Piensa poner imagen?</span>
                                 </label>
-                                <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                                <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
                             </div>
                         </div>
 
@@ -153,7 +153,7 @@
                                 <span class="image-controls" data-question-index="{{ $question->id }}" hidden>
                                     <button type="button" class="option-pill add-question-images-btn" data-question-index="{{ $question->id }}">Añadir imagen</button>
                                 </span>
-                                <small class="text-muted">Puedes subir una o varias fotos nuevas; si dejas esto vacío, se mantienen las existentes.</small>
+                                <small class="text-muted">Límite total de subida 20MB, máximo 2MB por imagen.</small>
                             </div>
                             <div class="question-image-controls mt-2" data-question-index="{{ $question->id }}" {{ empty($question->question_images) ? 'hidden' : '' }}>
                                 <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[{{ $question->id }}][question_images][]">
@@ -246,7 +246,7 @@
                             <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="new_${i}">
                             <span class="form-check-label">¿Piensa poner imagen?</span>
                         </label>
-                        <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                        <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
                     </div>
                 </div>
 
@@ -435,7 +435,30 @@
         if (total > MAX_BYTES) {
             ev.preventDefault();
             alert('El total de archivos seleccionados supera 20MB. Reduce el número o tamaño de imágenes, o adjusta el límite en el servidor.');
+            return;
         }
+
+        document.querySelectorAll('input[type=file]').forEach((inp) => {
+            if (inp.classList.contains('question-image-input')) {
+                const m = inp.name.match(/questions\[(.*?)\]\[question_images\]/);
+                if (m) {
+                    const q = m[1];
+                    if (document.querySelector(`input[name="questions[${q}][question_images_urls][]"]`)) {
+                        inp.disabled = true;
+                    }
+                }
+            }
+            if (inp.classList.contains('option-file-input')) {
+                const m = inp.name.match(/questions\[(.*?)\]\[option_images\]\[(\d+)\]/);
+                if (m) {
+                    const q = m[1];
+                    const opt = m[2];
+                    if (document.querySelector(`input[name="questions[${q}][option_images_urls][${opt}]"]`)) {
+                        inp.disabled = true;
+                    }
+                }
+            }
+        });
     });
 
     // Toggle question image controls and option image containers, and show previews
