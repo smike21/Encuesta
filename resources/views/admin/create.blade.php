@@ -63,6 +63,7 @@
         const optionImages = document.querySelector(`[data-option-images="${questionIndex}"]`);
         const maxSelectionsWrap = document.querySelector(`[data-max-selections-wrap="${questionIndex}"]`);
         if (optionsEditor) optionsEditor.hidden = !isMultiple;
+        if (optionsEditor) optionsEditor.querySelectorAll('input, select, textarea, button').forEach((field) => field.disabled = !isMultiple);
         if (optionImages) optionImages.hidden = !isMultiple;
         if (maxSelectionsWrap) maxSelectionsWrap.hidden = !isMultiple;
     }

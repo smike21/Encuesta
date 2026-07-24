@@ -211,6 +211,7 @@
         const optionsEditor = document.querySelector(`[data-options-editor="${questionIndex}"]`);
         const maxSelectionsWrap = document.querySelector(`[data-max-selections-wrap="${questionIndex}"]`);
         if (optionsEditor) optionsEditor.hidden = !isMultiple;
+        if (optionsEditor) optionsEditor.querySelectorAll('input, select, textarea, button').forEach((field) => field.disabled = !isMultiple);
         if (maxSelectionsWrap) maxSelectionsWrap.hidden = !isMultiple;
     }
 
@@ -367,6 +368,7 @@
         select.addEventListener('change', function () {
             setOptionVisibility(this.dataset.questionIndex, this.value === 'multiple_choice');
         });
+        setOptionVisibility(select.dataset.questionIndex, select.value === 'multiple_choice');
     });
 
     box.querySelectorAll('.remove-option').forEach((button) => {
