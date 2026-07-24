@@ -38,6 +38,7 @@ class AdminController extends Controller
     public function logout(Request $request): RedirectResponse { Auth::logout(); $request->session()->invalidate(); $request->session()->regenerateToken(); return redirect()->route('admin.login'); }
     public function dashboard(): View { $this->guard(); return view('admin.dashboard', ['surveys' => Survey::withCount(['questions', 'submissions'])->latest()->get()]); }
     public function create(): View { $this->guard(); return view('admin.create'); }
+    public function edit(Survey $survey): View { $this->guard(); $survey->load('questions'); return view('admin.edit', compact('survey')); }
     public function store(Request $request): RedirectResponse
     {
         $this->guard();
@@ -74,6 +75,45 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.dashboard')->with('success', 'Encuesta creada exitosamente.');
+    }
+    public function update(Request $request, Survey $survey): RedirectResponse
+    {
+        $this->guard();
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'collect_location' => ['nullable', 'boolean'],
+            'questions' => ['required', 'array', 'min:1'],
+            'questions.*.text' => ['required', 'string', 'max:500'],
+            'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
+            'questions.*.options' => ['nullable', 'array'],
+            'questions.*.options.*' => ['required', 'string', 'max:255'],
+            'questions.*.question_images' => ['nullable', 'array'],
+            'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.option_images' => ['nullable', 'array'],
+            'questions.*.option_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $survey->update([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'collect_location' => $request->boolean('collect_location'),
+        ]);
+
+        $survey->questions()->delete();
+
+        foreach ($data['questions'] as $position => $question) {
+            $survey->questions()->create([
+                'text' => $question['text'],
+                'type' => $question['type'],
+                'options' => $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null,
+                'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
+                'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),
+                'position' => $position,
+            ]);
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Encuesta actualizada exitosamente.');
     }
     public function results(Survey $survey): View { $this->guard(); $survey->load(['questions.answers', 'submissions']); return view('admin.results', compact('survey')); }
     public function surveyors(): View

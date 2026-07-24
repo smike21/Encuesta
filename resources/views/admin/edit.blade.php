@@ -1,0 +1,223 @@
+@extends('layouts.app')
+@section('title','Editar encuesta')
+@section('content')
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1>Editar encuesta</h1>
+        <form class="card p-4" method="post" action="{{ route('admin.update', $survey) }}" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+
+            <label class="form-label">Título</label>
+            <input class="form-control mb-3" name="title" value="{{ old('title', $survey->title) }}" required>
+
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control mb-3" name="description">{{ old('description', $survey->description) }}</textarea>
+
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" value="1" name="collect_location" id="location" {{ old('collect_location', $survey->collect_location) ? 'checked' : '' }}>
+                <label class="form-check-label" for="location">Solicitar ubicación al responder</label>
+            </div>
+
+            <h2 class="h4">Preguntas</h2>
+            <div id="questions">
+                @foreach($survey->questions as $question)
+                    <div class="border rounded p-3 mb-3 question-card">
+                        <div class="question-top mb-3">
+                            <span class="title-chip">Pregunta</span>
+                            <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                        </div>
+
+                        <input type="hidden" name="questions[{{ $question->id }}][id]" value="{{ $question->id }}">
+
+                        <label class="form-label">Texto de la pregunta</label>
+                        <input class="form-control mb-2" name="questions[{{ $question->id }}][text]" value="{{ old("questions.{$question->id}.text", $question->text) }}" required>
+
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select mb-3 question-type" data-question-index="{{ $question->id }}" name="questions[{{ $question->id }}][type]">
+                            <option value="text" {{ $question->type === 'text' ? 'selected' : '' }}>Respuesta corta</option>
+                            <option value="paragraph" {{ $question->type === 'paragraph' ? 'selected' : '' }}>Párrafo</option>
+                            <option value="multiple_choice" {{ $question->type === 'multiple_choice' ? 'selected' : '' }}>Opción múltiple</option>
+                            <option value="scale" {{ $question->type === 'scale' ? 'selected' : '' }}>Escala (1-5)</option>
+                        </select>
+
+                        <div class="options-editor" data-options-editor="{{ $question->id }}" {{ $question->type !== 'multiple_choice' ? 'hidden' : '' }}>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">Opciones</label>
+                                <button type="button" class="option-pill add-option">Agregar opción</button>
+                            </div>
+                            <div class="options-list" data-options-list="{{ $question->id }}">
+                                @if($question->type === 'multiple_choice' && !empty($question->options))
+                                    @foreach($question->options as $index => $option)
+                                        <div class="option-row">
+                                            <div>
+                                                <input class="form-control" type="text" name="questions[{{ $question->id }}][options][]" value="{{ old("questions.{$question->id}.options.{$index}", $option) }}" placeholder="Escribe una opción" required>
+                                                <div class="option-media-wrap">
+                                                    <label class="option-pill option-file-label">
+                                                        <span>🖼️ Poner imagen</span>
+                                                        <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][{{ $index }}]">
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="option-row">
+                                        <div>
+                                            <input class="form-control" type="text" name="questions[{{ $question->id }}][options][]" placeholder="Escribe una opción" required>
+                                            <div class="option-media-wrap">
+                                                <label class="option-pill option-file-label">
+                                                    <span>🖼️ Poner imagen</span>
+                                                    <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][0]">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Fotos al lado de la pregunta</label>
+                            <input type="file" class="form-control" accept="image/*" multiple name="questions[{{ $question->id }}][question_images][]">
+                            <small class="text-muted">Puedes subir una o varias fotos nuevas; si dejas esto vacío, se mantienen las existentes.</small>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <button type="button" class="btn btn-outline-primary my-3" id="add">Agregar pregunta</button>
+            <button class="btn btn-primary w-100">Guardar cambios</button>
+        </form>
+    </div>
+</div>
+@endsection
+@push('styles')
+<style>
+    .question-card { background: #fffdfb; }
+    .question-card .question-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .question-card .question-top .title-chip { display:inline-flex; align-items:center; gap:.45rem; padding:.35rem .7rem; border-radius:999px; background:#fff1e4; color:#8e3d08; font-size:.78rem; font-weight:800; }
+    .options-editor { border:1px solid #ead8c7; border-radius:16px; padding:1rem; background:#fff8f2; margin-bottom:1rem; }
+    .options-list { display:grid; gap:.65rem; }
+    .option-row { display:grid; grid-template-columns:1fr auto; gap:.6rem; align-items:start; }
+    .option-row input { width:100%; }
+    .option-pill { border:0; background:#fff; border:1px solid #dfc8b6; border-radius:10px; padding:.55rem .8rem; display:inline-flex; align-items:center; gap:.45rem; font:inherit; color:#8e3d08; cursor:pointer; }
+    .option-pill--danger { color:#9a2020; }
+    .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
+    .option-file-input { display:none; }
+    .option-file-label { min-width:140px; }
+</style>
+@endpush
+@push('scripts')
+<script>
+    let n = 0;
+    const box = document.getElementById('questions');
+
+    function setOptionVisibility(questionIndex, isMultiple) {
+        const optionsEditor = document.querySelector(`[data-options-editor="${questionIndex}"]`);
+        if (optionsEditor) optionsEditor.hidden = !isMultiple;
+    }
+
+    function addOption(questionIndex) {
+        const list = document.querySelector(`[data-options-list="${questionIndex}"]`);
+        const optionIndex = list.querySelectorAll('.option-row').length;
+        const row = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML = `
+            <div>
+                <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
+                <div class="option-media-wrap">
+                    <label class="option-pill option-file-label">
+                        <span>🖼️ Poner imagen</span>
+                        <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
+                    </label>
+                </div>
+            </div>
+            <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+        `;
+        list.appendChild(row);
+        row.querySelector('.remove-option').addEventListener('click', () => row.remove());
+    }
+
+    function addQuestion() {
+        const i = n++;
+        box.insertAdjacentHTML('beforeend', `
+            <div class="border rounded p-3 mb-3 question-card">
+                <div class="question-top mb-3">
+                    <span class="title-chip">Pregunta</span>
+                    <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+
+                <label class="form-label">Texto de la pregunta</label>
+                <input class="form-control mb-2" name="questions[new_${i}][text]" required>
+
+                <label class="form-label">Tipo</label>
+                <select class="form-select mb-3 question-type" data-question-index="new_${i}" name="questions[new_${i}][type]">
+                    <option value="text">Respuesta corta</option>
+                    <option value="paragraph">Párrafo</option>
+                    <option value="multiple_choice">Opción múltiple</option>
+                    <option value="scale">Escala (1-5)</option>
+                </select>
+
+                <div class="options-editor" data-options-editor="new_${i}" hidden>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0">Opciones</label>
+                        <button type="button" class="option-pill add-option">Agregar opción</button>
+                    </div>
+                    <div class="options-list" data-options-list="new_${i}">
+                        <div class="option-row">
+                            <div>
+                                <input class="form-control" type="text" name="questions[new_${i}][options][]" placeholder="Escribe una opción" required>
+                                <div class="option-media-wrap">
+                                    <label class="option-pill option-file-label">
+                                        <span>🖼️ Poner imagen</span>
+                                        <input class="option-file-input" type="file" accept="image/*" name="questions[new_${i}][option_images][0]">
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Fotos al lado de la pregunta</label>
+                    <input type="file" class="form-control" accept="image/*" multiple name="questions[new_${i}][question_images][]">
+                    <small class="text-muted">Puedes subir una o varias fotos.</small>
+                </div>
+            </div>
+        `);
+
+        const select = box.querySelector(`[data-question-index="new_${i}"]`);
+        select.addEventListener('change', function () {
+            setOptionVisibility(`new_${i}`, this.value === 'multiple_choice');
+        });
+
+        const addOptionBtn = box.querySelector(`[data-options-editor="new_${i}"] .add-option`);
+        addOptionBtn.addEventListener('click', () => addOption(`new_${i}`));
+
+        box.querySelectorAll(`[data-options-editor="new_${i}"] .remove-option`).forEach((button) => {
+            button.addEventListener('click', () => button.closest('.option-row').remove());
+        });
+    }
+
+    document.getElementById('add').addEventListener('click', addQuestion);
+
+    box.querySelectorAll('.question-type').forEach((select) => {
+        select.addEventListener('change', function () {
+            setOptionVisibility(this.dataset.questionIndex, this.value === 'multiple_choice');
+        });
+    });
+
+    box.querySelectorAll('.remove-option').forEach((button) => {
+        button.addEventListener('click', () => button.closest('.option-row').remove());
+    });
+
+    box.querySelectorAll('.add-option').forEach((button) => {
+        const questionIndex = button.closest('.options-editor').dataset.optionsEditor;
+        button.addEventListener('click', () => addOption(questionIndex));
+    });
+</script>
+@endpush
