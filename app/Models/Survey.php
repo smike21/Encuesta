@@ -17,7 +17,13 @@ class Survey extends Model
     }
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function questions(): HasMany { return $this->hasMany(Question::class)->orderBy('position'); }
+    // Select only essential columns to avoid loading large image data into memory
+    public function questions(): HasMany
+    {
+        return $this->hasMany(Question::class)
+            ->select(['id', 'survey_id', 'text', 'type', 'is_required', 'allow_multiple', 'max_selections', 'image_size', 'position'])
+            ->orderBy('position');
+    }
     public function submissions(): HasMany { return $this->hasMany(SurveySubmission::class); }
     public function surveyors(): BelongsToMany { return $this->belongsToMany(User::class, 'survey_user_accesses')->withTimestamps(); }
 }
