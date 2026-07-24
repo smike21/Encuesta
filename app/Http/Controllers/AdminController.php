@@ -8,7 +8,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
@@ -29,19 +28,10 @@ class AdminController extends Controller
     public function uploadImage(Request $request)
     {
         $this->guard();
-        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp'],]);
+        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],]);
         $file = $request->file('image');
-        try {
-            if (Storage::disk('public')->exists('.')) {
-                $path = Storage::disk('public')->putFile('uploads', $file);
-                $url = Storage::disk('public')->url($path);
-                return response()->json(['url' => $url]);
-            }
-        } catch (\Throwable $e) {
-            // fall through to base64 fallback
-        }
-
-        // Fallback to base64 data URI
+        // Railway's container filesystem is ephemeral. Keeping this small image in
+        // the database makes it survive deploys and avoids broken /storage links.
         $data = 'data:'.$file->getClientMimeType().';base64,'.base64_encode(file_get_contents($file->getRealPath()));
         return response()->json(['url' => $data]);
     }
@@ -72,6 +62,7 @@ class AdminController extends Controller
             'description' => ['nullable', 'string'],
             'collect_location' => ['nullable', 'boolean'],
             'questions' => ['required', 'array', 'min:1'],
+            'questions.*.id' => ['nullable', 'integer'],
             'questions.*.text' => ['required', 'string', 'max:500'],
             'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
             'questions.*.is_required' => ['nullable', 'boolean'],
@@ -79,7 +70,7 @@ class AdminController extends Controller
             'questions.*.max_selections' => ['nullable', 'integer', 'min:1'],
             'questions.*.image_size' => ['nullable', 'in:small,medium,large'],
             'questions.*.options' => ['nullable', 'array'],
-            'questions.*.options.*' => ['required', 'string', 'max:255'],
+            'questions.*.options.*' => ['nullable', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
             'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'questions.*.option_images' => ['nullable', 'array'],
@@ -141,6 +132,7 @@ class AdminController extends Controller
             'description' => ['nullable', 'string'],
             'collect_location' => ['nullable', 'boolean'],
             'questions' => ['required', 'array', 'min:1'],
+            'questions.*.id' => ['nullable', 'integer'],
             'questions.*.text' => ['required', 'string', 'max:500'],
             'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
             'questions.*.is_required' => ['nullable', 'boolean'],
@@ -148,7 +140,7 @@ class AdminController extends Controller
             'questions.*.max_selections' => ['nullable', 'integer', 'min:1'],
             'questions.*.image_size' => ['nullable', 'in:small,medium,large'],
             'questions.*.options' => ['nullable', 'array'],
-            'questions.*.options.*' => ['required', 'string', 'max:255'],
+            'questions.*.options.*' => ['nullable', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
             'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'questions.*.option_images' => ['nullable', 'array'],
@@ -161,51 +153,39 @@ class AdminController extends Controller
             'collect_location' => $request->boolean('collect_location'),
         ]);
 
-        // Preserve existing question images/options when editing: map existing questions by id
+        // Update existing questions in place. Deleting and recreating them here
+        // would cascade-delete every answer already submitted for the survey.
         $existingById = $survey->questions()->get()->keyBy(fn ($q) => (string) $q->id)->all();
-
-        $survey->questions()->delete();
+        $keptQuestionIds = [];
 
         foreach ($data['questions'] as $position => $question) {
+            $questionId = isset($question['id']) ? (string) $question['id'] : null;
+            $existingQuestion = $questionId ? ($existingById[$questionId] ?? null) : null;
+            if ($questionId && ! $existingQuestion) abort(422, 'La pregunta que intentas editar no pertenece a esta encuesta.');
             $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
             $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$position}.allow_multiple");
 
             // Determine question images: prefer async-uploaded URLs, else uploaded files, else keep existing minus removals
+            $questionImages = $existingQuestion?->question_images ?? [];
             if (!empty($question['question_images_urls'] ?? null)) {
-                $questionImages = array_values(array_filter($question['question_images_urls']));
+                $questionImages = array_values(array_unique(array_merge($questionImages, array_filter($question['question_images_urls']))));
             } elseif (!empty($question['question_images'] ?? null)) {
-                $questionImages = $this->storeUploadedImages($question['question_images']);
-            } else {
-                $questionImages = $existingById[(string) $position]->question_images ?? [];
-                // handle removals
-                $removeQ = $question['remove_question_images'] ?? [];
-                if (!empty($removeQ) && is_array($removeQ)) {
-                    $filtered = [];
-                    foreach (array_values($questionImages) as $idx => $val) {
-                        if (empty($removeQ[$idx])) $filtered[] = $val;
-                    }
-                    $questionImages = $filtered;
-                }
+                $questionImages = array_values(array_unique(array_merge($questionImages, $this->storeUploadedImages($question['question_images']))));
             }
+            $removeQ = $question['remove_question_images'] ?? [];
+            if (is_array($removeQ)) $questionImages = array_values(array_filter($questionImages, fn ($value, $index) => empty($removeQ[$index]), ARRAY_FILTER_USE_BOTH));
 
             // Option images: accept URLs or files, otherwise keep existing minus removals
+            $optionImages = $existingQuestion?->option_images ?? [];
             if (!empty($question['option_images_urls'] ?? null)) {
-                $optionImages = array_values(array_filter($question['option_images_urls']));
+                foreach ($question['option_images_urls'] as $index => $url) if ($url) $optionImages[$index] = $url;
             } elseif (!empty($question['option_images'] ?? null)) {
-                $optionImages = $this->storeUploadedImages($question['option_images']);
-            } else {
-                $optionImages = $existingById[(string) $position]->option_images ?? [];
-                $removeOpt = $question['remove_option_images'] ?? [];
-                if (!empty($removeOpt) && is_array($removeOpt)) {
-                    $filtered = [];
-                    foreach (array_values($optionImages) as $idx => $val) {
-                        if (empty($removeOpt[$idx])) $filtered[] = $val;
-                    }
-                    $optionImages = $filtered;
-                }
+                foreach ($this->storeUploadedImages($question['option_images']) as $index => $image) $optionImages[$index] = $image;
             }
+            $removeOpt = $question['remove_option_images'] ?? [];
+            if (is_array($removeOpt)) foreach ($removeOpt as $index => $remove) if ($remove) unset($optionImages[$index]);
 
-            $survey->questions()->create([
+            $attributes = [
                 'text' => $question['text'],
                 'type' => $question['type'],
                 'is_required' => $request->boolean("questions.{$position}.is_required"),
@@ -216,8 +196,15 @@ class AdminController extends Controller
                 'question_images' => $questionImages,
                 'option_images' => $optionImages,
                 'position' => $position,
-            ]);
+            ];
+            if ($existingQuestion) {
+                $existingQuestion->update($attributes);
+                $keptQuestionIds[] = $existingQuestion->id;
+            } else {
+                $keptQuestionIds[] = $survey->questions()->create($attributes)->id;
+            }
         }
+        $survey->questions()->whereNotIn('id', $keptQuestionIds)->delete();
 
         return redirect()->route('admin.dashboard')->with('success', 'Encuesta actualizada exitosamente.');
     }

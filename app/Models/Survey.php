@@ -24,7 +24,7 @@ class Survey extends Model
         return $this->hasMany(Question::class)
             ->select([
                 'id', 'survey_id', 'text', 'type', 'is_required', 'allow_multiple',
-                'max_selections', 'image_size', 'options', 'option_images', 'position'
+                'max_selections', 'image_size', 'options', 'question_images', 'option_images', 'position'
             ])
             ->orderBy('position');
     }

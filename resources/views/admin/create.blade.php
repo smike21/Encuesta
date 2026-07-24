@@ -251,19 +251,6 @@
     document.getElementById('add').addEventListener('click', addQuestion);
     addQuestion();
 
-    // Delegated handlers as fallback for dynamically added elements
-    document.addEventListener('click', (ev) => {
-        const t = ev.target;
-        if (!t || !t.classList) return;
-        if (t.classList.contains('add-option')) {
-            const q = t.closest('.options-editor')?.dataset.optionsEditor;
-            if (q) addOption(q);
-        }
-        if (t.classList.contains('remove-option')) {
-            t.closest('.option-row')?.remove();
-        }
-    });
-
     // Handle dynamic select/change behavior and image selection states
     document.addEventListener('change', (e) => {
         const t = e.target;

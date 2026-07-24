@@ -42,11 +42,7 @@
                 @if(!empty($question->question_images))
                     <div class="question-media-grid">
                         @foreach($question->question_images as $imagePath)
-                            @if(str_starts_with($imagePath, 'data:'))
-                                <img src="{{ $imagePath }}" alt="Imagen de pregunta" class="question-media-item {{ $imageSizeClass }}">
-                            @else
-                                <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item {{ $imageSizeClass }}">
-                            @endif
+                            <img src="{{ str_starts_with($imagePath, 'data:') || str_starts_with($imagePath, 'http') || str_starts_with($imagePath, '/') ? $imagePath : Storage::disk('public')->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item {{ $imageSizeClass }}">
                         @endforeach
                     </div>
                 @endif
@@ -60,7 +56,7 @@
                     @foreach($question->options ?? [] as $index => $option)
                         <div class="form-check option-choice-row">
                             @if($question->allow_multiple)
-                                <input class="form-check-input multiple-choice-input" type="checkbox" name="answers[{{ $question->id }}][]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" data-max-selections="{{ $question->max_selections ?? 1 }}" {{ $question->is_required ? 'required' : '' }}>
+                                <input class="form-check-input multiple-choice-input" type="checkbox" name="answers[{{ $question->id }}][]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" data-max-selections="{{ $question->max_selections ?? 1 }}">
                             @else
                                 <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" {{ $question->is_required ? 'required' : '' }}>
                             @endif
@@ -73,10 +69,11 @@
                                         default => 'option-media-item--medium',
                                     };
                                 @endphp
-                                @if(str_starts_with($question->option_images[$index], 'data:'))
-                                    <img src="{{ $question->option_images[$index] }}" alt="Imagen de opción" class="option-media-item {{ $optionImageSizeClass }}">
+                                @php($optionImage = $question->option_images[$index])
+                                @if(str_starts_with($optionImage, 'data:') || str_starts_with($optionImage, 'http') || str_starts_with($optionImage, '/'))
+                                    <img src="{{ $optionImage }}" alt="Imagen de opción" class="option-media-item {{ $optionImageSizeClass }}">
                                 @else
-                                    <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($question->option_images[$index]) }}" alt="Imagen de opción" class="option-media-item {{ $optionImageSizeClass }}">
+                                    <img src="{{ Storage::disk('public')->url($optionImage) }}" alt="Imagen de opción" class="option-media-item {{ $optionImageSizeClass }}">
                                 @endif
                             @endif
                         </div>

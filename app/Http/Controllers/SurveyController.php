@@ -7,6 +7,7 @@ use App\Models\Survey;
 use App\Models\SurveySubmission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class SurveyController extends Controller
@@ -35,8 +36,12 @@ class SurveyController extends Controller
         })->all();
         foreach ($questions as $question) {
             if ($question->type === 'multiple_choice' && $question->allow_multiple) {
-                $rules["answers.{$question->id}.*"] = ['string'];
+                $rules["answers.{$question->id}.*"] = ['string', Rule::in($question->options ?? [])];
                 $rules["answers.{$question->id}"][] = 'max:'.($question->max_selections ?? 1);
+            } elseif ($question->type === 'multiple_choice') {
+                $rules["answers.{$question->id}"][] = Rule::in($question->options ?? []);
+            } elseif ($question->type === 'scale') {
+                $rules["answers.{$question->id}"][] = 'in:1,2,3,4,5';
             }
         }
         $data = $request->validate($rules + [
@@ -59,7 +64,7 @@ class SurveyController extends Controller
                 $answerValue = json_encode($answerValue ?? []);
             }
 
-            Answer::create(['question_id' => $question->id, 'submission_id' => $submission->id, 'value' => $answerValue]);
+            Answer::create(['question_id' => $question->id, 'submission_id' => $submission->id, 'value' => $answerValue ?? '']);
         }
         return redirect()->route('surveys.index')->with('success', '¡Gracias por completar la encuesta!');
     }
