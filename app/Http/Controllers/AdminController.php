@@ -83,9 +83,10 @@ class AdminController extends Controller
             'collect_location' => $request->boolean('collect_location'),
         ]);
 
-        foreach ($data['questions'] as $position => $question) {
+        $position = 0;
+        foreach ($data['questions'] as $questionKey => $question) {
             $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
-            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$position}.allow_multiple");
+            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$questionKey}.allow_multiple");
 
             // Support async-uploaded URLs: prefer `question_images_urls` / `option_images_urls` if provided
             $questionImages = [];
@@ -106,7 +107,7 @@ class AdminController extends Controller
             $survey->questions()->create([
                 'text' => $question['text'],
                 'type' => $question['type'],
-                'is_required' => $request->boolean("questions.{$position}.is_required"),
+                'is_required' => $request->boolean("questions.{$questionKey}.is_required"),
                 'allow_multiple' => $allowMultiple,
                 'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
                 'image_size' => $question['image_size'] ?? 'medium',
@@ -115,6 +116,7 @@ class AdminController extends Controller
                 'option_images' => $optionImages,
                 'position' => $position,
             ]);
+            $position++;
         }
 
         return redirect()->route('admin.dashboard')->with('success', 'Encuesta creada exitosamente.');
@@ -158,12 +160,13 @@ class AdminController extends Controller
         $existingById = $survey->questions()->get()->keyBy(fn ($q) => (string) $q->id)->all();
         $keptQuestionIds = [];
 
-        foreach ($data['questions'] as $position => $question) {
+        $position = 0;
+        foreach ($data['questions'] as $questionKey => $question) {
             $questionId = isset($question['id']) ? (string) $question['id'] : null;
             $existingQuestion = $questionId ? ($existingById[$questionId] ?? null) : null;
             if ($questionId && ! $existingQuestion) abort(422, 'La pregunta que intentas editar no pertenece a esta encuesta.');
             $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
-            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$position}.allow_multiple");
+            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$questionKey}.allow_multiple");
 
             // Determine question images: prefer async-uploaded URLs, else uploaded files, else keep existing minus removals
             $questionImages = $existingQuestion?->question_images ?? [];
@@ -188,7 +191,7 @@ class AdminController extends Controller
             $attributes = [
                 'text' => $question['text'],
                 'type' => $question['type'],
-                'is_required' => $request->boolean("questions.{$position}.is_required"),
+                'is_required' => $request->boolean("questions.{$questionKey}.is_required"),
                 'allow_multiple' => $allowMultiple,
                 'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
                 'image_size' => $question['image_size'] ?? 'medium',
@@ -203,6 +206,7 @@ class AdminController extends Controller
             } else {
                 $keptQuestionIds[] = $survey->questions()->create($attributes)->id;
             }
+            $position++;
         }
         $survey->questions()->whereNotIn('id', $keptQuestionIds)->delete();
 
