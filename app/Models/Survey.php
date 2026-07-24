@@ -17,16 +17,17 @@ class Survey extends Model
     }
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    // Select only essential columns to avoid loading large image data into memory,
-    // but include `options` and `option_images` so alternatives render correctly.
+    // Images are stored with the question. Do not ORDER BY here: MySQL may try to
+    // sort very large JSON image values and exhaust its small Railway sort buffer.
+    // Questions are inserted in their displayed position, so their natural order
+    // remains stable without forcing a database sort.
     public function questions(): HasMany
     {
         return $this->hasMany(Question::class)
             ->select([
                 'id', 'survey_id', 'text', 'type', 'is_required', 'allow_multiple',
                 'max_selections', 'image_size', 'options', 'question_images', 'option_images', 'position'
-            ])
-            ->orderBy('position');
+            ]);
     }
     public function submissions(): HasMany { return $this->hasMany(SurveySubmission::class); }
     public function surveyors(): BelongsToMany { return $this->belongsToMany(User::class, 'survey_user_accesses')->withTimestamps(); }
