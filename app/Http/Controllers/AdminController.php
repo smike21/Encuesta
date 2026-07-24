@@ -73,8 +73,12 @@ class AdminController extends Controller
             'questions.*.options.*' => ['nullable', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
             'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.question_images_urls' => ['nullable', 'array'],
+            'questions.*.question_images_urls.*' => ['string', 'max:3000000'],
             'questions.*.option_images' => ['nullable', 'array'],
             'questions.*.option_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.option_images_urls' => ['nullable', 'array'],
+            'questions.*.option_images_urls.*' => ['string', 'max:3000000'],
         ]);
 
         $survey = Auth::user()->surveys()->create([
@@ -145,8 +149,12 @@ class AdminController extends Controller
             'questions.*.options.*' => ['nullable', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
             'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.question_images_urls' => ['nullable', 'array'],
+            'questions.*.question_images_urls.*' => ['string', 'max:3000000'],
             'questions.*.option_images' => ['nullable', 'array'],
             'questions.*.option_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.option_images_urls' => ['nullable', 'array'],
+            'questions.*.option_images_urls.*' => ['string', 'max:3000000'],
         ]);
 
         $survey->update([
