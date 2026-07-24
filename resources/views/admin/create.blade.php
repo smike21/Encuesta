@@ -222,17 +222,23 @@
             </div>
         `);
 
-        const select = box.querySelector(`[data-question-index="${i}"]`);
+        const select = box.querySelector(`.question-type[data-question-index="${i}"]`);
         const allowMultiple = box.querySelector(`#allow_multiple_${i}`);
         const maxSelectionsWrap = box.querySelector(`[data-max-selections-wrap="${i}"]`);
 
-        select.addEventListener('change', function () {
-            setOptionVisibility(i, this.value === 'multiple_choice');
-        });
+        if (select) {
+            select.addEventListener('change', function () {
+                setOptionVisibility(i, this.value === 'multiple_choice');
+            });
+            // initialize visibility based on default value
+            setOptionVisibility(i, select.value === 'multiple_choice');
+        }
 
-        allowMultiple.addEventListener('change', function () {
-            maxSelectionsWrap.hidden = !this.checked;
-        });
+        if (allowMultiple) {
+            allowMultiple.addEventListener('change', function () {
+                if (maxSelectionsWrap) maxSelectionsWrap.hidden = !this.checked;
+            });
+        }
 
         const addOptionBtn = box.querySelector(`[data-options-editor="${i}"] .add-option`);
         if (addOptionBtn) addOptionBtn.addEventListener('click', () => addOption(i));
