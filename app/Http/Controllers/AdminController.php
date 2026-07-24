@@ -20,9 +20,11 @@ class AdminController extends Controller
 
     private function storeUploadedImages(array $files): array
     {
-        return collect($files)->map(function ($file) {
+        $disk = config('filesystems.default', 'public');
+
+        return collect($files)->map(function ($file) use ($disk) {
             if (! $file) return null;
-            return Storage::disk('public')->putFile('survey-images', $file);
+            return Storage::disk($disk)->putFile('survey-images', $file);
         })->filter()->values()->all();
     }
 
