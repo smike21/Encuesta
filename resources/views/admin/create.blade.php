@@ -235,7 +235,7 @@
         });
 
         const addOptionBtn = box.querySelector(`[data-options-editor="${i}"] .add-option`);
-        addOptionBtn.addEventListener('click', () => addOption(i));
+        if (addOptionBtn) addOptionBtn.addEventListener('click', () => addOption(i));
 
         box.querySelectorAll(`[data-options-editor="${i}"] .remove-option`).forEach((button) => {
             button.addEventListener('click', () => button.closest('.option-row').remove());
@@ -244,6 +244,19 @@
 
     document.getElementById('add').addEventListener('click', addQuestion);
     addQuestion();
+
+    // Delegated handlers as fallback for dynamically added elements
+    document.addEventListener('click', (ev) => {
+        const t = ev.target;
+        if (!t || !t.classList) return;
+        if (t.classList.contains('add-option')) {
+            const q = t.closest('.options-editor')?.dataset.optionsEditor;
+            if (q) addOption(q);
+        }
+        if (t.classList.contains('remove-option')) {
+            t.closest('.option-row')?.remove();
+        }
+    });
 
     // Show small indicator when question images are selected
     document.addEventListener('change', (e) => {

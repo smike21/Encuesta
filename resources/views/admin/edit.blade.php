@@ -369,6 +369,19 @@
         button.addEventListener('click', () => addOption(questionIndex));
     });
 
+    // Delegated handlers as fallback for dynamic elements
+    document.addEventListener('click', (ev) => {
+        const t = ev.target;
+        if (!t || !t.classList) return;
+        if (t.classList.contains('add-option')) {
+            const q = t.closest('.options-editor')?.dataset.optionsEditor;
+            if (q) addOption(q);
+        }
+        if (t.classList.contains('remove-option')) {
+            t.closest('.option-row')?.remove();
+        }
+    });
+
     // Show indicator when question or option images are selected
     document.addEventListener('change', (e) => {
         const t = e.target;
