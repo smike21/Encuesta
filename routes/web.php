@@ -20,6 +20,7 @@ Route::put('/admin/encuestadores/{user}/permisos', [AdminController::class, 'upd
 Route::patch('/admin/encuestadores/{user}/estado', [AdminController::class, 'toggleSurveyor'])->name('admin.surveyors.toggle');
 Route::get('/admin/encuestas/crear', [AdminController::class, 'create'])->name('admin.create');
 Route::post('/admin/encuestas', [AdminController::class, 'store'])->name('admin.store');
+Route::post('/admin/upload-image', [AdminController::class, 'uploadImage'])->name('admin.upload_image');
 Route::get('/admin/encuestas/{survey}/editar', [AdminController::class, 'edit'])->name('admin.edit');
 Route::put('/admin/encuestas/{survey}', [AdminController::class, 'update'])->name('admin.update');
 Route::get('/admin/encuestas/{survey}/resultados', [AdminController::class, 'results'])->name('admin.results');

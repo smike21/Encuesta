@@ -4,8 +4,17 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <h1>Crear encuesta</h1>
-        <form class="card p-4" method="post" action="{{ route('admin.store') }}" enctype="multipart/form-data">
+        <form id="survey-form" class="card p-4" method="post" action="{{ route('admin.store') }}" enctype="multipart/form-data">
             @csrf
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <label class="form-label">Título</label>
             <input class="form-control mb-3" name="title" required>
 
@@ -63,12 +72,18 @@
         row.innerHTML = `
             <div>
                 <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
-                <div class="option-media-wrap">
-                    <label class="option-pill option-file-label">
-                        <span>🖼️ Poner imagen</span>
-                        <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
-                    </label>
-                    <div><small class="text-success option-image-status" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>Foto subida</small></div>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                    <button type="button" class="option-pill add-image-btn" data-question-index="${questionIndex}" data-option-index="${optionIndex}">Añadir imagen</button>
+                    <div class="option-image-container" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>
+                        <div class="option-media-wrap">
+                            <label class="option-pill option-file-label">
+                                <span>🖼️ Poner imagen</span>
+                                <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
+                            </label>
+                            <div><small class="text-success option-image-status" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>Foto subida</small></div>
+                        </div>
+                        <div class="image-previews"></div>
+                    </div>
                 </div>
             </div>
             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -123,12 +138,18 @@
                         <div class="option-row">
                             <div>
                                 <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
-                                <div class="option-media-wrap">
-                                    <label class="option-pill option-file-label">
-                                        <span>🖼️ Poner imagen</span>
-                                        <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][0]">
-                                    </label>
-                                    <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="0" hidden>Foto subida</small></div>
+                                <div class="d-flex align-items-center gap-2 mt-2">
+                                    <button type="button" class="option-pill add-image-btn" data-question-index="${i}" data-option-index="0">Añadir imagen</button>
+                                    <div class="option-image-container" data-question-index="${i}" data-option-index="0" hidden>
+                                        <div class="option-media-wrap">
+                                            <label class="option-pill option-file-label">
+                                                <span>🖼️ Poner imagen</span>
+                                                <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][0]">
+                                            </label>
+                                            <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="0" hidden>Foto subida</small></div>
+                                        </div>
+                                        <div class="image-previews"></div>
+                                    </div>
                                 </div>
                             </div>
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -136,12 +157,18 @@
                         <div class="option-row">
                             <div>
                                 <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
-                                <div class="option-media-wrap">
-                                    <label class="option-pill option-file-label">
-                                        <span>🖼️ Poner imagen</span>
-                                        <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][1]">
-                                    </label>
-                                    <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="1" hidden>Foto subida</small></div>
+                                <div class="d-flex align-items-center gap-2 mt-2">
+                                    <button type="button" class="option-pill add-image-btn" data-question-index="${i}" data-option-index="1">Añadir imagen</button>
+                                    <div class="option-image-container" data-question-index="${i}" data-option-index="1" hidden>
+                                        <div class="option-media-wrap">
+                                            <label class="option-pill option-file-label">
+                                                <span>🖼️ Poner imagen</span>
+                                                <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][1]">
+                                            </label>
+                                            <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="1" hidden>Foto subida</small></div>
+                                        </div>
+                                        <div class="image-previews"></div>
+                                    </div>
                                 </div>
                             </div>
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -160,9 +187,15 @@
 
                 <div class="mb-2">
                     <label class="form-label">Fotos al lado de la pregunta</label>
-                    <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[${i}][question_images][]">
-                    <small class="text-muted">Puedes subir una o varias fotos.</small>
-                    <div class="mt-1"><small class="text-success question-image-status" data-question-index="${i}" hidden>Foto(s) subida(s)</small></div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="option-pill add-question-images-btn" data-question-index="${i}">Añadir imagen</button>
+                        <small class="text-muted">Puedes subir una o varias fotos.</small>
+                    </div>
+                    <div class="question-image-controls mt-2" data-question-index="${i}" hidden>
+                        <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[new_${i}][question_images][]">
+                        <div class="image-previews mt-2"></div>
+                        <div class="mt-1"><small class="text-success question-image-status" data-question-index="${i}" hidden>Foto(s) subida(s)</small></div>
+                    </div>
                 </div>
 
                 <div class="mb-2" data-option-images="${i}" hidden>
@@ -220,6 +253,99 @@
                 status.hidden = t.files.length === 0;
                 status.textContent = t.files.length ? `Foto subida` : 'Foto subida';
             }
+        }
+    });
+
+    // Prevent submission if total selected files exceed configured soft-limit
+    document.getElementById('survey-form').addEventListener('submit', function (ev) {
+        const MAX_BYTES = 20 * 1024 * 1024; // 20MB client-side soft limit (match MAX_SURVEY_UPLOAD_BYTES)
+        let total = 0;
+        document.querySelectorAll('input[type=file]').forEach((inp) => {
+            for (let i = 0; i < inp.files.length; i++) total += inp.files[i].size;
+        });
+        if (total > MAX_BYTES) {
+            ev.preventDefault();
+            alert('El total de archivos seleccionados supera 20MB. Reduce el número o tamaño de imágenes, o adjusta el límite en el servidor.');
+        }
+    });
+
+    // Toggle controls and show previews for newly created question/option inputs
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('add-question-images-btn')) {
+            const q = e.target.dataset.questionIndex;
+            const ctrl = document.querySelector(`.question-image-controls[data-question-index="${q}"]`);
+            if (ctrl) ctrl.hidden = !ctrl.hidden;
+        }
+        if (e.target.classList.contains('add-image-btn')) {
+            const q = e.target.dataset.questionIndex;
+            const opt = e.target.dataset.optionIndex;
+            const container = document.querySelector(`.option-image-container[data-question-index="${q}"][data-option-index="${opt}"]`);
+            if (container) container.hidden = !container.hidden;
+        }
+    });
+
+    document.addEventListener('change', (e) => {
+        const t = e.target;
+        if (t.classList.contains('question-image-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[question_images\]/);
+            if (!m) return;
+            const q = m[1];
+            const previews = document.querySelector(`.question-image-controls[data-question-index="${q}"] .image-previews`);
+            if (!previews) return;
+            previews.innerHTML = '';
+            for (let i = 0; i < t.files.length; i++) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(t.files[i]);
+                img.className = 'img-preview';
+                previews.appendChild(img);
+            }
+            // async upload files and add hidden inputs with returned URLs
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            // remove previous hidden url inputs for this question
+            document.querySelectorAll(`input[name^="questions[${q}][question_images_urls]"]`).forEach(n => n.remove());
+            (async () => {
+                for (let i = 0; i < t.files.length; i++) {
+                    const fd = new FormData(); fd.append('image', t.files[i]);
+                    const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
+                    if (!res.ok) continue;
+                    const json = await res.json();
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `questions[${q}][question_images_urls][]`;
+                    input.value = json.url;
+                    document.getElementById('survey-form').appendChild(input);
+                }
+            })();
+        }
+        if (t.classList.contains('option-file-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[option_images\]\[(\d+)\]/);
+            if (!m) return;
+            const q = m[1];
+            const opt = m[2];
+            const previews = document.querySelector(`.option-image-container[data-question-index="${q}"][data-option-index="${opt}"] .image-previews`);
+            if (!previews) return;
+            previews.innerHTML = '';
+            if (t.files.length) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(t.files[0]);
+                img.className = 'img-preview';
+                previews.appendChild(img);
+            }
+            // async upload single option image and add hidden input preserving index
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            (async () => {
+                const fd = new FormData(); fd.append('image', t.files[0]);
+                const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
+                if (!res.ok) return;
+                const json = await res.json();
+                // remove previous hidden input for this option index
+                document.querySelectorAll(`input[name="questions[${q}][option_images_urls][${opt}]"]`).forEach(n=>n.remove());
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `questions[${q}][option_images_urls][${opt}]`;
+                input.value = json.url;
+                document.getElementById('survey-form').appendChild(input);
+            })();
         }
     });
 </script>

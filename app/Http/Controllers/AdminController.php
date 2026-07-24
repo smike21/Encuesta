@@ -25,6 +25,26 @@ class AdminController extends Controller
             return 'data:'.$file->getClientMimeType().';base64,'.base64_encode(file_get_contents($file->getRealPath()));
         })->filter()->values()->all();
     }
+    
+    public function uploadImage(Request $request)
+    {
+        $this->guard();
+        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp'],]);
+        $file = $request->file('image');
+        try {
+            if (Storage::disk('public')->exists('.')) {
+                $path = Storage::disk('public')->putFile('uploads', $file);
+                $url = Storage::disk('public')->url($path);
+                return response()->json(['url' => $url]);
+            }
+        } catch (\Throwable $e) {
+            // fall through to base64 fallback
+        }
+
+        // Fallback to base64 data URI
+        $data = 'data:'.$file->getClientMimeType().';base64,'.base64_encode(file_get_contents($file->getRealPath()));
+        return response()->json(['url' => $data]);
+    }
 
     public function loginForm(): View { return view('admin.login'); }
     public function login(Request $request): RedirectResponse
@@ -40,6 +60,13 @@ class AdminController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->guard();
+        // Quick server-side guard against enormous multipart requests that would
+        // otherwise be truncated or cause PHP/DB errors. Adjust MAX_SURVEY_UPLOAD_BYTES in .env if needed.
+        $maxTotal = (int) env('MAX_SURVEY_UPLOAD_BYTES', 20 * 1024 * 1024);
+        $contentLength = (int) ($request->server('CONTENT_LENGTH') ?? 0);
+        if ($contentLength > 0 && $contentLength > $maxTotal) {
+            return back()->withErrors(['__form' => "El formulario supera el límite de tamaño ({$maxTotal} bytes). Reduce el número/tamaño de imágenes o aumenta post_max_size en PHP."])->withInput();
+        }
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
@@ -69,6 +96,22 @@ class AdminController extends Controller
             $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
             $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$position}.allow_multiple");
 
+            // Support async-uploaded URLs: prefer `question_images_urls` / `option_images_urls` if provided
+            $questionImages = [];
+            if (!empty($question['question_images_urls'] ?? null)) {
+                $questionImages = array_values(array_filter($question['question_images_urls']));
+            } elseif (!empty($question['question_images'] ?? null)) {
+                $questionImages = $this->storeUploadedImages($question['question_images']);
+            }
+
+            $optionImages = [];
+            if (!empty($question['option_images_urls'] ?? null)) {
+                // maintain indexes (could be sparse)
+                $optionImages = array_values(array_filter($question['option_images_urls']));
+            } elseif (!empty($question['option_images'] ?? null)) {
+                $optionImages = $this->storeUploadedImages($question['option_images']);
+            }
+
             $survey->questions()->create([
                 'text' => $question['text'],
                 'type' => $question['type'],
@@ -77,8 +120,8 @@ class AdminController extends Controller
                 'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
                 'image_size' => $question['image_size'] ?? 'medium',
                 'options' => $options,
-                'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
-                'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),
+                'question_images' => $questionImages,
+                'option_images' => $optionImages,
                 'position' => $position,
             ]);
         }
@@ -88,6 +131,11 @@ class AdminController extends Controller
     public function update(Request $request, Survey $survey): RedirectResponse
     {
         $this->guard();
+        $maxTotal = (int) env('MAX_SURVEY_UPLOAD_BYTES', 20 * 1024 * 1024);
+        $contentLength = (int) ($request->server('CONTENT_LENGTH') ?? 0);
+        if ($contentLength > 0 && $contentLength > $maxTotal) {
+            return back()->withErrors(['__form' => "El formulario supera el límite de tamaño ({$maxTotal} bytes). Reduce el número/tamaño de imágenes o aumenta post_max_size en PHP."])->withInput();
+        }
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
@@ -113,11 +161,49 @@ class AdminController extends Controller
             'collect_location' => $request->boolean('collect_location'),
         ]);
 
+        // Preserve existing question images/options when editing: map existing questions by id
+        $existingById = $survey->questions()->get()->keyBy(fn ($q) => (string) $q->id)->all();
+
         $survey->questions()->delete();
 
         foreach ($data['questions'] as $position => $question) {
             $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
             $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$position}.allow_multiple");
+
+            // Determine question images: prefer async-uploaded URLs, else uploaded files, else keep existing minus removals
+            if (!empty($question['question_images_urls'] ?? null)) {
+                $questionImages = array_values(array_filter($question['question_images_urls']));
+            } elseif (!empty($question['question_images'] ?? null)) {
+                $questionImages = $this->storeUploadedImages($question['question_images']);
+            } else {
+                $questionImages = $existingById[(string) $position]->question_images ?? [];
+                // handle removals
+                $removeQ = $question['remove_question_images'] ?? [];
+                if (!empty($removeQ) && is_array($removeQ)) {
+                    $filtered = [];
+                    foreach (array_values($questionImages) as $idx => $val) {
+                        if (empty($removeQ[$idx])) $filtered[] = $val;
+                    }
+                    $questionImages = $filtered;
+                }
+            }
+
+            // Option images: accept URLs or files, otherwise keep existing minus removals
+            if (!empty($question['option_images_urls'] ?? null)) {
+                $optionImages = array_values(array_filter($question['option_images_urls']));
+            } elseif (!empty($question['option_images'] ?? null)) {
+                $optionImages = $this->storeUploadedImages($question['option_images']);
+            } else {
+                $optionImages = $existingById[(string) $position]->option_images ?? [];
+                $removeOpt = $question['remove_option_images'] ?? [];
+                if (!empty($removeOpt) && is_array($removeOpt)) {
+                    $filtered = [];
+                    foreach (array_values($optionImages) as $idx => $val) {
+                        if (empty($removeOpt[$idx])) $filtered[] = $val;
+                    }
+                    $optionImages = $filtered;
+                }
+            }
 
             $survey->questions()->create([
                 'text' => $question['text'],
@@ -127,8 +213,8 @@ class AdminController extends Controller
                 'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
                 'image_size' => $question['image_size'] ?? 'medium',
                 'options' => $options,
-                'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
-                'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),
+                'question_images' => $questionImages,
+                'option_images' => $optionImages,
                 'position' => $position,
             ]);
         }
