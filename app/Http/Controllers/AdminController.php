@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
@@ -16,6 +17,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class AdminController extends Controller
 {
     private function guard(): void { abort_unless(Auth::check() && Auth::user()->is_admin, 403); }
+
+    private function storeUploadedImages(array $files): array
+    {
+        return collect($files)->map(function ($file) {
+            if (! $file) return null;
+            return Storage::disk('public')->putFile('survey-images', $file);
+        })->filter()->values()->all();
+    }
+
     public function loginForm(): View { return view('admin.login'); }
     public function login(Request $request): RedirectResponse
     {
@@ -29,9 +39,37 @@ class AdminController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->guard();
-        $data = $request->validate(['title' => ['required', 'string', 'max:200'], 'description' => ['nullable', 'string'], 'collect_location' => ['nullable', 'boolean'], 'questions' => ['required', 'array', 'min:1'], 'questions.*.text' => ['required', 'string', 'max:500'], 'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'], 'questions.*.options' => ['nullable', 'string']]);
-        $survey = Auth::user()->surveys()->create(['title' => $data['title'], 'description' => $data['description'] ?? null, 'collect_location' => $request->boolean('collect_location')]);
-        foreach ($data['questions'] as $position => $question) $survey->questions()->create(['text' => $question['text'], 'type' => $question['type'], 'options' => $question['type'] === 'multiple_choice' ? collect(explode(',', $question['options'] ?? ''))->map(fn ($v) => trim($v))->filter()->values()->all() : null, 'position' => $position]);
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'collect_location' => ['nullable', 'boolean'],
+            'questions' => ['required', 'array', 'min:1'],
+            'questions.*.text' => ['required', 'string', 'max:500'],
+            'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
+            'questions.*.options' => ['nullable', 'string'],
+            'questions.*.question_images' => ['nullable', 'array'],
+            'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.option_images' => ['nullable', 'array'],
+            'questions.*.option_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $survey = Auth::user()->surveys()->create([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'collect_location' => $request->boolean('collect_location'),
+        ]);
+
+        foreach ($data['questions'] as $position => $question) {
+            $survey->questions()->create([
+                'text' => $question['text'],
+                'type' => $question['type'],
+                'options' => $question['type'] === 'multiple_choice' ? collect(explode(',', $question['options'] ?? ''))->map(fn ($value) => trim($value))->filter()->values()->all() : null,
+                'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
+                'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),
+                'position' => $position,
+            ]);
+        }
+
         return redirect()->route('admin.dashboard')->with('success', 'Encuesta creada exitosamente.');
     }
     public function results(Survey $survey): View { $this->guard(); $survey->load(['questions.answers', 'submissions']); return view('admin.results', compact('survey')); }
