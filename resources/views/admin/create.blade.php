@@ -264,9 +264,21 @@
         }
     });
 
-    // Show small indicator when question images are selected
+    // Handle dynamic select/change behavior and image selection states
     document.addEventListener('change', (e) => {
         const t = e.target;
+        if (t.classList.contains('question-type')) {
+            setOptionVisibility(t.dataset.questionIndex, t.value === 'multiple_choice');
+            return;
+        }
+        if (t.classList.contains('allow-multiple')) {
+            const q = t.closest('.options-editor')?.dataset.optionsEditor;
+            if (q) {
+                const maxWrap = document.querySelector(`[data-max-selections-wrap="${q}"]`);
+                if (maxWrap) maxWrap.hidden = !t.checked;
+            }
+            return;
+        }
         if (t.classList.contains('think-image-toggle')) {
             const q = t.dataset.questionIndex;
             document.querySelectorAll(`.image-controls[data-question-index="${q}"]`).forEach(n => n.hidden = !t.checked);

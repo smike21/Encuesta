@@ -62,7 +62,7 @@
                             <label class="form-check-label" for="required_{{ $question->id }}">Pregunta obligatoria</label>
                         </div>
 
-                        <div class="options-editor" data-options-editor="{{ $question->id }}" {{ $question->type !== 'multiple_choice' ? 'hidden' : '' }}>
+                        <div class="options-editor" data-options-editor="{{ $question->id }}" {{ old("questions.{$question->id}.type", $question->type) !== 'multiple_choice' ? 'hidden' : '' }}>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <label class="form-label mb-0">Opciones</label>
                                 <button type="button" class="option-pill add-option">Agregar opción</button>
@@ -73,7 +73,7 @@
                                 <label class="form-check-label" for="allow_multiple_{{ $question->id }}">Permitir varias opciones</label>
                             </div>
 
-                            <div class="mb-3" data-max-selections-wrap="{{ $question->id }}" {{ !$question->allow_multiple ? 'hidden' : '' }}>
+                            <div class="mb-3" data-max-selections-wrap="{{ $question->id }}" {{ !old("questions.{$question->id}.allow_multiple", $question->allow_multiple) ? 'hidden' : '' }}>
                                 <label class="form-label">Número máximo de opciones permitidas</label>
                                 <input class="form-control" type="number" min="1" name="questions[{{ $question->id }}][max_selections]" value="{{ old("questions.{$question->id}.max_selections", $question->max_selections ?? 1) }}" placeholder="Ej. 2">
                             </div>
@@ -332,7 +332,7 @@
             </div>
         `);
 
-        const select = box.querySelector(`[data-question-index="new_${i}"]`);
+        const select = box.querySelector(`.question-type[data-question-index="new_${i}"]`);
         const allowMultiple = box.querySelector(`#allow_multiple_new_${i}`);
         const maxSelectionsWrap = box.querySelector(`[data-max-selections-wrap="new_${i}"]`);
 
