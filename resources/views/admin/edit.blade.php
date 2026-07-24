@@ -38,7 +38,7 @@
                             <div class="d-flex align-items-center" style="gap:.6rem">
                                 <label class="form-check form-switch mb-0" style="margin-bottom:0">
                                     <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="{{ $question->id }}">
-                                    <span class="form-check-label">¿Piensa poner imagen?</span>
+                                    <span class="form-check-label">¿Piensa añadir imagen?</span>
                                 </label>
                                 <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
                             </div>
@@ -123,7 +123,7 @@
                                                 <div class="option-image-container" data-question-index="{{ $question->id }}" data-option-index="0" hidden>
                                                     <div class="option-media-wrap">
                                                         <label class="option-pill option-file-label">
-                                                            <span>🖼️ Poner imagen</span>
+                                                            <span>🖼️ Añadir imagen</span>
                                                             <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][0]">
                                                         </label>
                                                         <div><small class="text-success option-image-status" data-question-index="{{ $question->id }}" data-option-index="0" hidden>Foto subida</small></div>
@@ -195,7 +195,7 @@
     .option-pill--danger { color:#9a2020; }
     .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
     .option-file-input { display:none; }
-    .option-file-label { min-width:140px; }
+    .option-file-label { min-width:140px; cursor:pointer; }
     .img-preview { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #e6d7c7; }
     .image-previews { display:flex; align-items:center; margin-top:.5rem; }
     .image-controls { display:inline-flex; align-items:center; gap:.4rem; }
@@ -224,7 +224,7 @@
                 <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
                 <div class="option-media-wrap">
                     <label class="option-pill option-file-label">
-                        <span>🖼️ Poner imagen</span>
+                        <span>🖼️ Añadir imagen</span>
                         <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
                     </label>
                 </div>
@@ -244,7 +244,7 @@
                     <div class="d-flex align-items-center" style="gap:.6rem">
                         <label class="form-check form-switch mb-0" style="margin-bottom:0">
                             <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="new_${i}">
-                            <span class="form-check-label">¿Piensa poner imagen?</span>
+                            <span class="form-check-label">¿Piensa añadir imagen?</span>
                         </label>
                         <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
                     </div>
@@ -293,7 +293,7 @@
                                     <div class="option-image-container" data-question-index="new_${i}" data-option-index="0" hidden>
                                         <div class="option-media-wrap">
                                             <label class="option-pill option-file-label">
-                                                <span>🖼️ Poner imagen</span>
+                                                <span>🖼️ Añadir imagen</span>
                                                 <input class="option-file-input" type="file" accept="image/*" name="questions[new_${i}][option_images][0]">
                                             </label>
                                         </div>

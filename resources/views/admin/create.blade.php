@@ -47,7 +47,7 @@
     .option-pill--danger { color:#9a2020; }
     .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
     .option-file-input { display:none; }
-    .option-file-label { min-width:140px; }
+    .option-file-label { min-width:140px; cursor:pointer; }
     .img-preview { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #e6d7c7; }
     .image-previews { display:flex; align-items:center; margin-top:.5rem; }
     .image-controls { display:inline-flex; align-items:center; gap:.4rem; }
@@ -82,7 +82,7 @@
                     <div class="option-image-container" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>
                         <div class="option-media-wrap">
                             <label class="option-pill option-file-label">
-                                <span>🖼️ Poner imagen</span>
+                                <span>🖼️ Añadir imagen</span>
                                 <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
                             </label>
                             <div><small class="text-success option-image-status" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>Foto subida</small></div>
@@ -107,7 +107,7 @@
                     <div class="d-flex align-items-center" style="gap:.6rem">
                         <label class="form-check form-switch mb-0" style="margin-bottom:0">
                             <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="${i}">
-                            <span class="form-check-label">¿Piensa poner imagen?</span>
+                            <span class="form-check-label">¿Piensa añadir imagen?</span>
                         </label>
                         <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
                     </div>
@@ -156,7 +156,7 @@
                                     <div class="option-image-container" data-question-index="${i}" data-option-index="0" hidden>
                                         <div class="option-media-wrap">
                                             <label class="option-pill option-file-label">
-                                                <span>🖼️ Poner imagen</span>
+                                                <span>🖼️ Añadir imagen</span>
                                                 <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][0]">
                                             </label>
                                             <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="0" hidden>Foto subida</small></div>
@@ -177,7 +177,7 @@
                                     <div class="option-image-container" data-question-index="${i}" data-option-index="1" hidden>
                                         <div class="option-media-wrap">
                                             <label class="option-pill option-file-label">
-                                                <span>🖼️ Poner imagen</span>
+                                                <span>🖼️ Añadir imagen</span>
                                                 <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][1]">
                                             </label>
                                             <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="1" hidden>Foto subida</small></div>
@@ -217,7 +217,7 @@
 
                 <div class="mb-2" data-option-images="${i}" hidden>
                     <label class="form-label">Imágenes por opción</label>
-                    <small class="text-muted d-block">Cada opción ya trae su propio botón “Poner imagen”.</small>
+                    <small class="text-muted d-block">Cada opción ya trae su propio botón “Añadir imagen”.</small>
                 </div>
             </div>
         `);
