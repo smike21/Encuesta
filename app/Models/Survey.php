@@ -17,11 +17,15 @@ class Survey extends Model
     }
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    // Select only essential columns to avoid loading large image data into memory
+    // Select only essential columns to avoid loading large image data into memory,
+    // but include `options` and `option_images` so alternatives render correctly.
     public function questions(): HasMany
     {
         return $this->hasMany(Question::class)
-            ->select(['id', 'survey_id', 'text', 'type', 'is_required', 'allow_multiple', 'max_selections', 'image_size', 'position'])
+            ->select([
+                'id', 'survey_id', 'text', 'type', 'is_required', 'allow_multiple',
+                'max_selections', 'image_size', 'options', 'option_images', 'position'
+            ])
             ->orderBy('position');
     }
     public function submissions(): HasMany { return $this->hasMany(SurveySubmission::class); }

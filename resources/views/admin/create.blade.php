@@ -68,6 +68,7 @@
                         <span>🖼️ Poner imagen</span>
                         <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
                     </label>
+                    <div><small class="text-success option-image-status" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>Foto subida</small></div>
                 </div>
             </div>
             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -127,6 +128,7 @@
                                         <span>🖼️ Poner imagen</span>
                                         <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][0]">
                                     </label>
+                                    <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="0" hidden>Foto subida</small></div>
                                 </div>
                             </div>
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -139,6 +141,7 @@
                                         <span>🖼️ Poner imagen</span>
                                         <input class="option-file-input" type="file" accept="image/*" name="questions[${i}][option_images][1]">
                                     </label>
+                                    <div><small class="text-success option-image-status" data-question-index="${i}" data-option-index="1" hidden>Foto subida</small></div>
                                 </div>
                             </div>
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -157,8 +160,9 @@
 
                 <div class="mb-2">
                     <label class="form-label">Fotos al lado de la pregunta</label>
-                    <input type="file" class="form-control" accept="image/*" multiple name="questions[${i}][question_images][]">
+                    <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[${i}][question_images][]">
                     <small class="text-muted">Puedes subir una o varias fotos.</small>
+                    <div class="mt-1"><small class="text-success question-image-status" data-question-index="${i}" hidden>Foto(s) subida(s)</small></div>
                 </div>
 
                 <div class="mb-2" data-option-images="${i}" hidden>
@@ -190,5 +194,33 @@
 
     document.getElementById('add').addEventListener('click', addQuestion);
     addQuestion();
+
+    // Show small indicator when question images are selected
+    document.addEventListener('change', (e) => {
+        const t = e.target;
+        if (t.classList.contains('question-image-input')) {
+            const input = t;
+            const qIndexMatch = input.name.match(/questions\[(.*?)\]\[question_images\]/);
+            if (!qIndexMatch) return;
+            const idx = qIndexMatch[1];
+            const status = document.querySelector(`.question-image-status[data-question-index="${idx}"]`);
+            if (status) {
+                status.hidden = input.files.length === 0;
+                status.textContent = input.files.length ? `Foto(s) subida(s): ${input.files.length}` : 'Foto(s) subida(s)';
+            }
+        }
+
+        if (t.classList.contains('option-file-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[option_images\]\[(\d+)\]/);
+            if (!m) return;
+            const q = m[1];
+            const opt = m[2];
+            const status = document.querySelector(`.option-image-status[data-question-index="${q}"][data-option-index="${opt}"]`);
+            if (status) {
+                status.hidden = t.files.length === 0;
+                status.textContent = t.files.length ? `Foto subida` : 'Foto subida';
+            }
+        }
+    });
 </script>
 @endpush

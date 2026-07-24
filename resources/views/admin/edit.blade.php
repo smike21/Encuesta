@@ -69,11 +69,12 @@
                                             <div>
                                                 <input class="form-control" type="text" name="questions[{{ $question->id }}][options][]" value="{{ old("questions.{$question->id}.options.{$index}", $option) }}" placeholder="Escribe una opción" required>
                                                 <div class="option-media-wrap">
-                                                    <label class="option-pill option-file-label">
-                                                        <span>🖼️ Poner imagen</span>
-                                                        <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][{{ $index }}]">
-                                                    </label>
-                                                </div>
+                                                        <label class="option-pill option-file-label">
+                                                            <span>🖼️ Poner imagen</span>
+                                                            <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][{{ $index }}]">
+                                                        </label>
+                                                        <div><small class="text-success option-image-status" data-question-index="{{ $question->id }}" data-option-index="{{ $index }}" hidden>Foto subida</small></div>
+                                                    </div>
                                             </div>
                                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
                                         </div>
@@ -87,6 +88,7 @@
                                                     <span>🖼️ Poner imagen</span>
                                                     <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][0]">
                                                 </label>
+                                                <div><small class="text-success option-image-status" data-question-index="{{ $question->id }}" data-option-index="0" hidden>Foto subida</small></div>
                                             </div>
                                         </div>
                                         <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -106,8 +108,9 @@
 
                         <div class="mb-2">
                             <label class="form-label">Fotos al lado de la pregunta</label>
-                            <input type="file" class="form-control" accept="image/*" multiple name="questions[{{ $question->id }}][question_images][]">
+                            <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[{{ $question->id }}][question_images][]">
                             <small class="text-muted">Puedes subir una o varias fotos nuevas; si dejas esto vacío, se mantienen las existentes.</small>
+                            <div class="mt-1"><small class="text-success question-image-status" data-question-index="{{ $question->id }}" hidden>Foto(s) subida(s)</small></div>
                         </div>
                     </div>
                 @endforeach
@@ -277,6 +280,33 @@
     box.querySelectorAll('.add-option').forEach((button) => {
         const questionIndex = button.closest('.options-editor').dataset.optionsEditor;
         button.addEventListener('click', () => addOption(questionIndex));
+    });
+
+    // Show indicator when question or option images are selected
+    document.addEventListener('change', (e) => {
+        const t = e.target;
+        if (t.classList.contains('question-image-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[question_images\]/);
+            if (!m) return;
+            const q = m[1];
+            const status = document.querySelector(`.question-image-status[data-question-index="${q}"]`);
+            if (status) {
+                status.hidden = t.files.length === 0;
+                status.textContent = t.files.length ? `Foto(s) subida(s): ${t.files.length}` : 'Foto(s) subida(s)';
+            }
+        }
+
+        if (t.classList.contains('option-file-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[option_images\]\[(\d+)\]/);
+            if (!m) return;
+            const q = m[1];
+            const opt = m[2];
+            const status = document.querySelector(`.option-image-status[data-question-index="${q}"][data-option-index="${opt}"]`);
+            if (status) {
+                status.hidden = t.files.length === 0;
+                status.textContent = t.files.length ? `Foto subida` : 'Foto subida';
+            }
+        }
     });
 </script>
 @endpush
