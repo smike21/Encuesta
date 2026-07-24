@@ -34,7 +34,11 @@
                 @if(!empty($question->question_images))
                     <div class="question-media-grid">
                         @foreach($question->question_images as $imagePath)
-                            <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item">
+                            @if(str_starts_with($imagePath, 'data:'))
+                                <img src="{{ $imagePath }}" alt="Imagen de pregunta" class="question-media-item">
+                            @else
+                                <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item">
+                            @endif
                         @endforeach
                     </div>
                 @endif
@@ -42,12 +46,23 @@
                 @if($question->type === 'paragraph')
                     <textarea class="form-control" rows="3" name="answers[{{ $question->id }}]" {{ $question->is_required ? 'required' : '' }}></textarea>
                 @elseif($question->type === 'multiple_choice')
+                    @if($question->allow_multiple)
+                        <small class="text-muted d-block mb-2">Selecciona hasta {{ $question->max_selections ?? 1 }} opciones.</small>
+                    @endif
                     @foreach($question->options ?? [] as $index => $option)
                         <div class="form-check option-choice-row">
-                            <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" {{ $question->is_required ? 'required' : '' }}>
+                            @if($question->allow_multiple)
+                                <input class="form-check-input multiple-choice-input" type="checkbox" name="answers[{{ $question->id }}][]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" data-max-selections="{{ $question->max_selections ?? 1 }}" {{ $question->is_required ? 'required' : '' }}>
+                            @else
+                                <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" {{ $question->is_required ? 'required' : '' }}>
+                            @endif
                             <label class="form-check-label" for="q{{ $question->id }}o{{ $index }}">{{ $option }}</label>
                             @if(!empty($question->option_images[$index] ?? null))
-                                <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($question->option_images[$index]) }}" alt="Imagen de opción" class="option-media-item">
+                                @if(str_starts_with($question->option_images[$index], 'data:'))
+                                    <img src="{{ $question->option_images[$index] }}" alt="Imagen de opción" class="option-media-item">
+                                @else
+                                    <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($question->option_images[$index]) }}" alt="Imagen de opción" class="option-media-item">
+                                @endif
                             @endif
                         </div>
                     @endforeach
@@ -117,5 +132,17 @@ document.getElementById('locate')?.addEventListener('click', () => navigator.geo
     longitude.value = p.coords.longitude;
     document.getElementById('location-status').textContent = 'Ubicación obtenida';
 }, () => document.getElementById('location-status').textContent = 'No se pudo obtener la ubicación') : document.getElementById('location-status').textContent = 'Tu navegador no admite ubicación');
+
+const multiChoiceInputs = document.querySelectorAll('.multiple-choice-input');
+multiChoiceInputs.forEach((input) => {
+    input.addEventListener('change', function () {
+        const maxSelections = Number(this.dataset.maxSelections || 1);
+        const checkedBoxes = Array.from(document.querySelectorAll(`input[name="${this.name}"]`)).filter((box) => box.checked);
+        if (checkedBoxes.length > maxSelections) {
+            this.checked = false;
+            alert(`Solo puedes seleccionar hasta ${maxSelections} opciones.`);
+        }
+    });
+});
 </script>
 @endpush

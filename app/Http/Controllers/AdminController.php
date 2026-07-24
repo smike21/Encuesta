@@ -20,11 +20,9 @@ class AdminController extends Controller
 
     private function storeUploadedImages(array $files): array
     {
-        $disk = config('filesystems.default', 'public');
-
-        return collect($files)->map(function ($file) use ($disk) {
+        return collect($files)->map(function ($file) {
             if (! $file) return null;
-            return Storage::disk($disk)->putFile('survey-images', $file);
+            return 'data:'.$file->getClientMimeType().';base64,'.base64_encode(file_get_contents($file->getRealPath()));
         })->filter()->values()->all();
     }
 
@@ -50,6 +48,8 @@ class AdminController extends Controller
             'questions.*.text' => ['required', 'string', 'max:500'],
             'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
             'questions.*.is_required' => ['nullable', 'boolean'],
+            'questions.*.allow_multiple' => ['nullable', 'boolean'],
+            'questions.*.max_selections' => ['nullable', 'integer', 'min:1'],
             'questions.*.options' => ['nullable', 'array'],
             'questions.*.options.*' => ['required', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
@@ -65,11 +65,16 @@ class AdminController extends Controller
         ]);
 
         foreach ($data['questions'] as $position => $question) {
+            $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
+            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$position}.allow_multiple");
+
             $survey->questions()->create([
                 'text' => $question['text'],
                 'type' => $question['type'],
                 'is_required' => $request->boolean("questions.{$position}.is_required"),
-                'options' => $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null,
+                'allow_multiple' => $allowMultiple,
+                'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
+                'options' => $options,
                 'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
                 'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),
                 'position' => $position,
@@ -89,6 +94,8 @@ class AdminController extends Controller
             'questions.*.text' => ['required', 'string', 'max:500'],
             'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
             'questions.*.is_required' => ['nullable', 'boolean'],
+            'questions.*.allow_multiple' => ['nullable', 'boolean'],
+            'questions.*.max_selections' => ['nullable', 'integer', 'min:1'],
             'questions.*.options' => ['nullable', 'array'],
             'questions.*.options.*' => ['required', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
@@ -106,11 +113,16 @@ class AdminController extends Controller
         $survey->questions()->delete();
 
         foreach ($data['questions'] as $position => $question) {
+            $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
+            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$position}.allow_multiple");
+
             $survey->questions()->create([
                 'text' => $question['text'],
                 'type' => $question['type'],
                 'is_required' => $request->boolean("questions.{$position}.is_required"),
-                'options' => $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null,
+                'allow_multiple' => $allowMultiple,
+                'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
+                'options' => $options,
                 'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
                 'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),
                 'position' => $position,

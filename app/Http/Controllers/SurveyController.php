@@ -26,7 +26,19 @@ class SurveyController extends Controller
     {
         abort_unless($survey->is_active, 404);
         $questions = $survey->questions;
-        $rules = $questions->mapWithKeys(fn ($question) => ["answers.{$question->id}" => $question->is_required ? ['required', 'string'] : ['nullable', 'string']])->all();
+        $rules = $questions->mapWithKeys(function ($question) {
+            if ($question->type === 'multiple_choice' && $question->allow_multiple) {
+                return ["answers.{$question->id}" => $question->is_required ? ['required', 'array', 'min:1'] : ['nullable', 'array']];
+            }
+
+            return ["answers.{$question->id}" => $question->is_required ? ['required', 'string'] : ['nullable', 'string']];
+        })->all();
+        foreach ($questions as $question) {
+            if ($question->type === 'multiple_choice' && $question->allow_multiple) {
+                $rules["answers.{$question->id}.*"] = ['string'];
+                $rules["answers.{$question->id}"][] = 'max:'.($question->max_selections ?? 1);
+            }
+        }
         $data = $request->validate($rules + [
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
@@ -41,7 +53,14 @@ class SurveyController extends Controller
             'timezone' => $data['timezone'] ?? null,
             'locale' => $data['locale'] ?? null,
         ]);
-        foreach ($questions as $question) Answer::create(['question_id' => $question->id, 'submission_id' => $submission->id, 'value' => $data['answers'][$question->id]]);
+        foreach ($questions as $question) {
+            $answerValue = $data['answers'][$question->id] ?? null;
+            if ($question->type === 'multiple_choice' && $question->allow_multiple) {
+                $answerValue = json_encode($answerValue ?? []);
+            }
+
+            Answer::create(['question_id' => $question->id, 'submission_id' => $submission->id, 'value' => $answerValue]);
+        }
         return redirect()->route('surveys.index')->with('success', '¡Gracias por completar la encuesta!');
     }
 }

@@ -49,8 +49,10 @@
     function setOptionVisibility(questionIndex, isMultiple) {
         const optionsEditor = document.querySelector(`[data-options-editor="${questionIndex}"]`);
         const optionImages = document.querySelector(`[data-option-images="${questionIndex}"]`);
+        const maxSelectionsWrap = document.querySelector(`[data-max-selections-wrap="${questionIndex}"]`);
         if (optionsEditor) optionsEditor.hidden = !isMultiple;
         if (optionImages) optionImages.hidden = !isMultiple;
+        if (maxSelectionsWrap) maxSelectionsWrap.hidden = !isMultiple;
     }
 
     function addOption(questionIndex) {
@@ -105,6 +107,17 @@
                         <label class="form-label mb-0">Opciones</label>
                         <button type="button" class="option-pill add-option">Agregar opción</button>
                     </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input allow-multiple" type="checkbox" value="1" name="questions[${i}][allow_multiple]" id="allow_multiple_${i}">
+                        <label class="form-check-label" for="allow_multiple_${i}">Permitir varias opciones</label>
+                    </div>
+
+                    <div class="mb-3" data-max-selections-wrap="${i}" hidden>
+                        <label class="form-label">Número máximo de opciones permitidas</label>
+                        <input class="form-control" type="number" min="1" name="questions[${i}][max_selections]" value="1" placeholder="Ej. 2">
+                    </div>
+
                     <div class="options-list" data-options-list="${i}">
                         <div class="option-row">
                             <div>
@@ -147,8 +160,15 @@
         `);
 
         const select = box.querySelector(`[data-question-index="${i}"]`);
+        const allowMultiple = box.querySelector(`#allow_multiple_${i}`);
+        const maxSelectionsWrap = box.querySelector(`[data-max-selections-wrap="${i}"]`);
+
         select.addEventListener('change', function () {
             setOptionVisibility(i, this.value === 'multiple_choice');
+        });
+
+        allowMultiple.addEventListener('change', function () {
+            maxSelectionsWrap.hidden = !this.checked;
         });
 
         const addOptionBtn = box.querySelector(`[data-options-editor="${i}"] .add-option`);
