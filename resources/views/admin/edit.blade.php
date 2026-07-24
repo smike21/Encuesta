@@ -222,11 +222,20 @@
         row.innerHTML = `
             <div>
                 <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
-                <div class="option-media-wrap">
-                    <label class="option-pill option-file-label">
-                        <span>🖼️ Añadir imagen</span>
-                        <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
-                    </label>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                    <span class="image-controls" data-question-index="${questionIndex}" hidden>
+                        <button type="button" class="option-pill add-image-btn" data-question-index="${questionIndex}" data-option-index="${optionIndex}">Añadir imagen</button>
+                    </span>
+                    <div class="option-image-container" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>
+                        <div class="option-media-wrap">
+                            <label class="option-pill option-file-label">
+                                <span>🖼️ Añadir imagen</span>
+                                <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
+                            </label>
+                            <div><small class="text-success option-image-status" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>Foto subida</small></div>
+                        </div>
+                        <div class="image-previews"></div>
+                    </div>
                 </div>
             </div>
             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
