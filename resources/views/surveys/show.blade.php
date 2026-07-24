@@ -40,11 +40,11 @@
                 @endif
 
                 @if($question->type === 'paragraph')
-                    <textarea class="form-control" rows="3" name="answers[{{ $question->id }}]" required></textarea>
+                    <textarea class="form-control" rows="3" name="answers[{{ $question->id }}]" {{ $question->is_required ? 'required' : '' }}></textarea>
                 @elseif($question->type === 'multiple_choice')
                     @foreach($question->options ?? [] as $index => $option)
                         <div class="form-check option-choice-row">
-                            <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" required>
+                            <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" {{ $question->is_required ? 'required' : '' }}>
                             <label class="form-check-label" for="q{{ $question->id }}o{{ $index }}">{{ $option }}</label>
                             @if(!empty($question->option_images[$index] ?? null))
                                 <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($question->option_images[$index]) }}" alt="Imagen de opción" class="option-media-item">
@@ -55,14 +55,14 @@
                     <div>
                         @for($i=1;$i<=5;$i++)
                             <label class="me-3">
-                                <input type="radio" name="answers[{{ $question->id }}]" value="{{ $i }}" required>
+                                <input type="radio" name="answers[{{ $question->id }}]" value="{{ $i }}" {{ $question->is_required ? 'required' : '' }}>
                                 {{ $i }}
                             </label>
                         @endfor
                     </div>
                     <small>1 = Muy malo, 5 = Excelente</small>
                 @else
-                    <input class="form-control" name="answers[{{ $question->id }}]" required>
+                    <input class="form-control" name="answers[{{ $question->id }}]" {{ $question->is_required ? 'required' : '' }}>
                 @endif
 
                 @error("answers.{$question->id}")

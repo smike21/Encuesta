@@ -49,6 +49,7 @@ class AdminController extends Controller
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.text' => ['required', 'string', 'max:500'],
             'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
+            'questions.*.is_required' => ['nullable', 'boolean'],
             'questions.*.options' => ['nullable', 'array'],
             'questions.*.options.*' => ['required', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
@@ -67,6 +68,7 @@ class AdminController extends Controller
             $survey->questions()->create([
                 'text' => $question['text'],
                 'type' => $question['type'],
+                'is_required' => $request->boolean("questions.{$position}.is_required"),
                 'options' => $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null,
                 'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
                 'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),
@@ -86,6 +88,7 @@ class AdminController extends Controller
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.text' => ['required', 'string', 'max:500'],
             'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
+            'questions.*.is_required' => ['nullable', 'boolean'],
             'questions.*.options' => ['nullable', 'array'],
             'questions.*.options.*' => ['required', 'string', 'max:255'],
             'questions.*.question_images' => ['nullable', 'array'],
@@ -106,6 +109,7 @@ class AdminController extends Controller
             $survey->questions()->create([
                 'text' => $question['text'],
                 'type' => $question['type'],
+                'is_required' => $request->boolean("questions.{$position}.is_required"),
                 'options' => $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null,
                 'question_images' => $this->storeUploadedImages($question['question_images'] ?? []),
                 'option_images' => $this->storeUploadedImages($question['option_images'] ?? []),

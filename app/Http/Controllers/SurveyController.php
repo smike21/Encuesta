@@ -26,7 +26,7 @@ class SurveyController extends Controller
     {
         abort_unless($survey->is_active, 404);
         $questions = $survey->questions;
-        $rules = $questions->mapWithKeys(fn ($question) => ["answers.{$question->id}" => ['required', 'string']])->all();
+        $rules = $questions->mapWithKeys(fn ($question) => ["answers.{$question->id}" => $question->is_required ? ['required', 'string'] : ['nullable', 'string']])->all();
         $data = $request->validate($rules + [
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],

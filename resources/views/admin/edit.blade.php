@@ -41,6 +41,11 @@
                             <option value="scale" {{ $question->type === 'scale' ? 'selected' : '' }}>Escala (1-5)</option>
                         </select>
 
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" value="1" name="questions[{{ $question->id }}][is_required]" id="required_{{ $question->id }}" {{ old("questions.{$question->id}.is_required", $question->is_required) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="required_{{ $question->id }}">Pregunta obligatoria</label>
+                        </div>
+
                         <div class="options-editor" data-options-editor="{{ $question->id }}" {{ $question->type !== 'multiple_choice' ? 'hidden' : '' }}>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <label class="form-label mb-0">Opciones</label>
@@ -160,6 +165,11 @@
                     <option value="multiple_choice">Opción múltiple</option>
                     <option value="scale">Escala (1-5)</option>
                 </select>
+
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" value="1" name="questions[new_${i}][is_required]" id="required_new_${i}" checked>
+                    <label class="form-check-label" for="required_new_${i}">Pregunta obligatoria</label>
+                </div>
 
                 <div class="options-editor" data-options-editor="new_${i}" hidden>
                     <div class="d-flex justify-content-between align-items-center mb-2">
