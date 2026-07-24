@@ -96,6 +96,15 @@
                         </div>
 
                         <div class="mb-2">
+                            <label class="form-label">Tamaño de las imágenes</label>
+                            <select class="form-select" name="questions[{{ $question->id }}][image_size]">
+                                <option value="small" {{ old("questions.{$question->id}.image_size", $question->image_size ?? 'medium') === 'small' ? 'selected' : '' }}>Pequeña</option>
+                                <option value="medium" {{ old("questions.{$question->id}.image_size", $question->image_size ?? 'medium') === 'medium' ? 'selected' : '' }}>Mediana</option>
+                                <option value="large" {{ old("questions.{$question->id}.image_size", $question->image_size ?? 'medium') === 'large' ? 'selected' : '' }}>Grande</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-2">
                             <label class="form-label">Fotos al lado de la pregunta</label>
                             <input type="file" class="form-control" accept="image/*" multiple name="questions[{{ $question->id }}][question_images][]">
                             <small class="text-muted">Puedes subir una o varias fotos nuevas; si dejas esto vacío, se mantienen las existentes.</small>
@@ -214,6 +223,15 @@
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
                         </div>
                     </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Tamaño de las imágenes</label>
+                    <select class="form-select" name="questions[new_${i}][image_size]">
+                        <option value="small">Pequeña</option>
+                        <option value="medium" selected>Mediana</option>
+                        <option value="large">Grande</option>
+                    </select>
                 </div>
 
                 <div class="mb-2">

@@ -147,6 +147,15 @@
                 </div>
 
                 <div class="mb-2">
+                    <label class="form-label">Tamaño de las imágenes</label>
+                    <select class="form-select" name="questions[${i}][image_size]">
+                        <option value="small">Pequeña</option>
+                        <option value="medium" selected>Mediana</option>
+                        <option value="large">Grande</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
                     <label class="form-label">Fotos al lado de la pregunta</label>
                     <input type="file" class="form-control" accept="image/*" multiple name="questions[${i}][question_images][]">
                     <small class="text-muted">Puedes subir una o varias fotos.</small>

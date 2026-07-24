@@ -31,13 +31,21 @@
             <div class="card-body">
                 <label class="form-label fw-bold">{{ $question->text }}</label>
 
+                @php
+                    $imageSizeClass = match ($question->image_size ?? 'medium') {
+                        'small' => 'question-media-item--small',
+                        'large' => 'question-media-item--large',
+                        default => 'question-media-item--medium',
+                    };
+                @endphp
+
                 @if(!empty($question->question_images))
                     <div class="question-media-grid">
                         @foreach($question->question_images as $imagePath)
                             @if(str_starts_with($imagePath, 'data:'))
-                                <img src="{{ $imagePath }}" alt="Imagen de pregunta" class="question-media-item">
+                                <img src="{{ $imagePath }}" alt="Imagen de pregunta" class="question-media-item {{ $imageSizeClass }}">
                             @else
-                                <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item">
+                                <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item {{ $imageSizeClass }}">
                             @endif
                         @endforeach
                     </div>
@@ -58,10 +66,17 @@
                             @endif
                             <label class="form-check-label" for="q{{ $question->id }}o{{ $index }}">{{ $option }}</label>
                             @if(!empty($question->option_images[$index] ?? null))
+                                @php
+                                    $optionImageSizeClass = match ($question->image_size ?? 'medium') {
+                                        'small' => 'option-media-item--small',
+                                        'large' => 'option-media-item--large',
+                                        default => 'option-media-item--medium',
+                                    };
+                                @endphp
                                 @if(str_starts_with($question->option_images[$index], 'data:'))
-                                    <img src="{{ $question->option_images[$index] }}" alt="Imagen de opción" class="option-media-item">
+                                    <img src="{{ $question->option_images[$index] }}" alt="Imagen de opción" class="option-media-item {{ $optionImageSizeClass }}">
                                 @else
-                                    <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($question->option_images[$index]) }}" alt="Imagen de opción" class="option-media-item">
+                                    <img src="{{ Storage::disk(config('filesystems.default', 'public'))->url($question->option_images[$index]) }}" alt="Imagen de opción" class="option-media-item {{ $optionImageSizeClass }}">
                                 @endif
                             @endif
                         </div>
@@ -101,11 +116,14 @@
 
     .question-media-item {
         width: 100%;
-        height: 180px;
         object-fit: cover;
         border-radius: 14px;
         border: 1px solid #ead8c7;
     }
+
+    .question-media-item--small { height: 110px; }
+    .question-media-item--medium { height: 180px; }
+    .question-media-item--large { height: 260px; }
 
     .option-choice-row {
         display: flex;
@@ -115,12 +133,14 @@
     }
 
     .option-media-item {
-        width: 72px;
-        height: 72px;
         object-fit: cover;
         border-radius: 12px;
         border: 1px solid #ead8c7;
     }
+
+    .option-media-item--small { width: 48px; height: 48px; }
+    .option-media-item--medium { width: 72px; height: 72px; }
+    .option-media-item--large { width: 96px; height: 96px; }
 </style>
 @endpush
 @push('scripts')
