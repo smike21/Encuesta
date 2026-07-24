@@ -35,7 +35,13 @@
                     <div class="border rounded p-3 mb-3 question-card">
                         <div class="question-top mb-3">
                             <span class="title-chip">Pregunta</span>
-                            <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                            <div class="d-flex align-items-center" style="gap:.6rem">
+                                <label class="form-check form-switch mb-0" style="margin-bottom:0">
+                                    <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="{{ $question->id }}">
+                                    <span class="form-check-label">¿Piensa poner imagen?</span>
+                                </label>
+                                <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                            </div>
                         </div>
 
                         <input type="hidden" name="questions[{{ $question->id }}][id]" value="{{ $question->id }}">
@@ -79,7 +85,9 @@
                                             <div>
                                                 <input class="form-control" type="text" name="questions[{{ $question->id }}][options][]" value="{{ old("questions.{$question->id}.options.{$index}", $option) }}" placeholder="Escribe una opción" required>
                                                 <div class="d-flex align-items-center gap-2 mt-2">
-                                                    <button type="button" class="option-pill add-image-btn" data-question-index="{{ $question->id }}" data-option-index="{{ $index }}">Añadir imagen</button>
+                                                    <span class="image-controls" data-question-index="{{ $question->id }}" hidden>
+                                                        <button type="button" class="option-pill add-image-btn" data-question-index="{{ $question->id }}" data-option-index="{{ $index }}">Añadir imagen</button>
+                                                    </span>
                                                     <div class="option-image-container" data-question-index="{{ $question->id }}" data-option-index="{{ $index }}" {{ empty($question->option_images[$index] ?? null) ? 'hidden' : '' }}>
                                                         <div class="option-media-wrap">
                                                             <label class="option-pill option-file-label">
@@ -109,7 +117,9 @@
                                         <div>
                                             <input class="form-control" type="text" name="questions[{{ $question->id }}][options][]" placeholder="Escribe una opción" required>
                                             <div class="d-flex align-items-center gap-2 mt-2">
-                                                <button type="button" class="option-pill add-image-btn" data-question-index="{{ $question->id }}" data-option-index="0">Añadir imagen</button>
+                                                <span class="image-controls" data-question-index="{{ $question->id }}" hidden>
+                                                    <button type="button" class="option-pill add-image-btn" data-question-index="{{ $question->id }}" data-option-index="0">Añadir imagen</button>
+                                                </span>
                                                 <div class="option-image-container" data-question-index="{{ $question->id }}" data-option-index="0" hidden>
                                                     <div class="option-media-wrap">
                                                         <label class="option-pill option-file-label">
@@ -140,7 +150,9 @@
                         <div class="mb-2">
                             <label class="form-label">Fotos al lado de la pregunta</label>
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="option-pill add-question-images-btn" data-question-index="{{ $question->id }}">Añadir imagen</button>
+                                <span class="image-controls" data-question-index="{{ $question->id }}" hidden>
+                                    <button type="button" class="option-pill add-question-images-btn" data-question-index="{{ $question->id }}">Añadir imagen</button>
+                                </span>
                                 <small class="text-muted">Puedes subir una o varias fotos nuevas; si dejas esto vacío, se mantienen las existentes.</small>
                             </div>
                             <div class="question-image-controls mt-2" data-question-index="{{ $question->id }}" {{ empty($question->question_images) ? 'hidden' : '' }}>
@@ -184,8 +196,9 @@
     .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
     .option-file-input { display:none; }
     .option-file-label { min-width:140px; }
-    .img-preview { width:72px; height:72px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #e6d7c7; }
+    .img-preview { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #e6d7c7; }
     .image-previews { display:flex; align-items:center; margin-top:.5rem; }
+    .image-controls { display:inline-flex; align-items:center; gap:.4rem; }
     .to-remove { opacity:.45; filter:grayscale(80%); }
 </style>
 @endpush
@@ -228,7 +241,13 @@
             <div class="border rounded p-3 mb-3 question-card">
                 <div class="question-top mb-3">
                     <span class="title-chip">Pregunta</span>
-                    <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                    <div class="d-flex align-items-center" style="gap:.6rem">
+                        <label class="form-check form-switch mb-0" style="margin-bottom:0">
+                            <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="new_${i}">
+                            <span class="form-check-label">¿Piensa poner imagen?</span>
+                        </label>
+                        <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
                 </div>
 
                 <label class="form-label">Texto de la pregunta</label>
@@ -267,11 +286,19 @@
                         <div class="option-row">
                             <div>
                                 <input class="form-control" type="text" name="questions[new_${i}][options][]" placeholder="Escribe una opción" required>
-                                <div class="option-media-wrap">
-                                    <label class="option-pill option-file-label">
-                                        <span>🖼️ Poner imagen</span>
-                                        <input class="option-file-input" type="file" accept="image/*" name="questions[new_${i}][option_images][0]">
-                                    </label>
+                                <div class="d-flex align-items-center gap-2 mt-2">
+                                    <span class="image-controls" data-question-index="new_${i}" hidden>
+                                        <button type="button" class="option-pill add-image-btn" data-question-index="new_${i}" data-option-index="0">Añadir imagen</button>
+                                    </span>
+                                    <div class="option-image-container" data-question-index="new_${i}" data-option-index="0" hidden>
+                                        <div class="option-media-wrap">
+                                            <label class="option-pill option-file-label">
+                                                <span>🖼️ Poner imagen</span>
+                                                <input class="option-file-input" type="file" accept="image/*" name="questions[new_${i}][option_images][0]">
+                                            </label>
+                                        </div>
+                                        <div class="image-previews"></div>
+                                    </div>
                                 </div>
                             </div>
                             <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
@@ -290,8 +317,17 @@
 
                 <div class="mb-2">
                     <label class="form-label">Fotos al lado de la pregunta</label>
-                    <input type="file" class="form-control" accept="image/*" multiple name="questions[new_${i}][question_images][]">
-                    <small class="text-muted">Puedes subir una o varias fotos.</small>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="image-controls" data-question-index="new_${i}" hidden>
+                            <button type="button" class="option-pill add-question-images-btn" data-question-index="new_${i}">Añadir imagen</button>
+                        </span>
+                        <small class="text-muted">Puedes subir una o varias fotos.</small>
+                    </div>
+                    <div class="question-image-controls mt-2" data-question-index="new_${i}" hidden>
+                        <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[new_${i}][question_images][]">
+                        <div class="image-previews mt-2"></div>
+                        <div class="mt-1"><small class="text-success question-image-status" data-question-index="new_${i}" hidden>Foto(s) subida(s)</small></div>
+                    </div>
                 </div>
             </div>
         `);
@@ -336,6 +372,16 @@
     // Show indicator when question or option images are selected
     document.addEventListener('change', (e) => {
         const t = e.target;
+        if (t.classList.contains('think-image-toggle')) {
+            const q = t.dataset.questionIndex;
+            document.querySelectorAll(`.image-controls[data-question-index="${q}"]`).forEach(n => n.hidden = !t.checked);
+            return;
+        }
+        if (t.classList.contains('think-image-toggle')) {
+            const q = t.dataset.questionIndex;
+            document.querySelectorAll(`.image-controls[data-question-index="${q}"]`).forEach(n => n.hidden = !t.checked);
+            return;
+        }
         if (t.classList.contains('question-image-input')) {
             const m = t.name.match(/questions\[(.*?)\]\[question_images\]/);
             if (!m) return;

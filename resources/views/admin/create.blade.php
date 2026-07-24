@@ -48,6 +48,9 @@
     .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
     .option-file-input { display:none; }
     .option-file-label { min-width:140px; }
+    .img-preview { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #e6d7c7; }
+    .image-previews { display:flex; align-items:center; margin-top:.5rem; }
+    .image-controls { display:inline-flex; align-items:center; gap:.4rem; }
 </style>
 @endpush
 @push('scripts')
@@ -73,7 +76,9 @@
             <div>
                 <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
                 <div class="d-flex align-items-center gap-2 mt-2">
-                    <button type="button" class="option-pill add-image-btn" data-question-index="${questionIndex}" data-option-index="${optionIndex}">Añadir imagen</button>
+                    <span class="image-controls" data-question-index="${questionIndex}" hidden>
+                        <button type="button" class="option-pill add-image-btn" data-question-index="${questionIndex}" data-option-index="${optionIndex}">Añadir imagen</button>
+                    </span>
                     <div class="option-image-container" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>
                         <div class="option-media-wrap">
                             <label class="option-pill option-file-label">
@@ -99,7 +104,13 @@
             <div class="border rounded p-3 mb-3 question-card">
                 <div class="question-top mb-3">
                     <span class="title-chip">Pregunta</span>
-                    <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                    <div class="d-flex align-items-center" style="gap:.6rem">
+                        <label class="form-check form-switch mb-0" style="margin-bottom:0">
+                            <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="${i}">
+                            <span class="form-check-label">¿Piensa poner imagen?</span>
+                        </label>
+                        <button type="button" class="btn-close float-end" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
                 </div>
 
                 <label class="form-label">Texto de la pregunta</label>
@@ -139,7 +150,9 @@
                             <div>
                                 <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
                                 <div class="d-flex align-items-center gap-2 mt-2">
-                                    <button type="button" class="option-pill add-image-btn" data-question-index="${i}" data-option-index="0">Añadir imagen</button>
+                                    <span class="image-controls" data-question-index="${i}" hidden>
+                                        <button type="button" class="option-pill add-image-btn" data-question-index="${i}" data-option-index="0">Añadir imagen</button>
+                                    </span>
                                     <div class="option-image-container" data-question-index="${i}" data-option-index="0" hidden>
                                         <div class="option-media-wrap">
                                             <label class="option-pill option-file-label">
@@ -158,7 +171,9 @@
                             <div>
                                 <input class="form-control" type="text" name="questions[${i}][options][]" placeholder="Escribe una opción" required>
                                 <div class="d-flex align-items-center gap-2 mt-2">
-                                    <button type="button" class="option-pill add-image-btn" data-question-index="${i}" data-option-index="1">Añadir imagen</button>
+                                    <span class="image-controls" data-question-index="${i}" hidden>
+                                        <button type="button" class="option-pill add-image-btn" data-question-index="${i}" data-option-index="1">Añadir imagen</button>
+                                    </span>
                                     <div class="option-image-container" data-question-index="${i}" data-option-index="1" hidden>
                                         <div class="option-media-wrap">
                                             <label class="option-pill option-file-label">
@@ -188,7 +203,9 @@
                 <div class="mb-2">
                     <label class="form-label">Fotos al lado de la pregunta</label>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="option-pill add-question-images-btn" data-question-index="${i}">Añadir imagen</button>
+                        <span class="image-controls" data-question-index="${i}" hidden>
+                            <button type="button" class="option-pill add-question-images-btn" data-question-index="${i}">Añadir imagen</button>
+                        </span>
                         <small class="text-muted">Puedes subir una o varias fotos.</small>
                     </div>
                     <div class="question-image-controls mt-2" data-question-index="${i}" hidden>
@@ -231,6 +248,11 @@
     // Show small indicator when question images are selected
     document.addEventListener('change', (e) => {
         const t = e.target;
+        if (t.classList.contains('think-image-toggle')) {
+            const q = t.dataset.questionIndex;
+            document.querySelectorAll(`.image-controls[data-question-index="${q}"]`).forEach(n => n.hidden = !t.checked);
+            return;
+        }
         if (t.classList.contains('question-image-input')) {
             const input = t;
             const qIndexMatch = input.name.match(/questions\[(.*?)\]\[question_images\]/);
