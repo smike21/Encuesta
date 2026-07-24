@@ -90,7 +90,12 @@
                                                         </div>
                                                         <div class="image-previews">
                                                             @if(!empty($question->option_images[$index] ?? null))
-                                                                <img src="{{ $question->option_images[$index] }}" class="img-preview" alt="preview">
+                                                                <div class="d-flex align-items-center" style="gap:.5rem">
+                                                                    <img src="{{ $question->option_images[$index] }}" class="img-preview" alt="preview">
+                                                                    <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                                                        <input type="checkbox" name="questions[{{ $question->id }}][remove_option_images][{{ $index }}]" value="1" class="remove-image-checkbox"> Eliminar
+                                                                    </label>
+                                                                </div>
                                                             @endif
                                                         </div>
                                                     </div>
@@ -142,8 +147,13 @@
                                 <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[{{ $question->id }}][question_images][]">
                                 <div class="image-previews mt-2">
                                     @if(!empty($question->question_images))
-                                        @foreach($question->question_images as $img)
-                                            <img src="{{ $img }}" class="img-preview" alt="preview">
+                                        @foreach($question->question_images as $idx => $img)
+                                            <div class="d-flex align-items-center" style="gap:.5rem">
+                                                <img src="{{ $img }}" class="img-preview" alt="preview">
+                                                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                                    <input type="checkbox" name="questions[{{ $question->id }}][remove_question_images][{{ $idx }}]" value="1" class="remove-image-checkbox"> Eliminar
+                                                </label>
+                                            </div>
                                         @endforeach
                                     @endif
                                 </div>
@@ -176,6 +186,7 @@
     .option-file-label { min-width:140px; }
     .img-preview { width:72px; height:72px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #e6d7c7; }
     .image-previews { display:flex; align-items:center; margin-top:.5rem; }
+    .to-remove { opacity:.45; filter:grayscale(80%); }
 </style>
 @endpush
 @push('scripts')
@@ -346,6 +357,12 @@
                 status.hidden = t.files.length === 0;
                 status.textContent = t.files.length ? `Foto subida` : 'Foto subida';
             }
+        }
+
+        // Mark preview when a remove checkbox is toggled
+        if (t.classList.contains('remove-image-checkbox')) {
+            const img = t.closest('div').querySelector('img.img-preview');
+            if (img) img.classList.toggle('to-remove', t.checked);
         }
     });
 
