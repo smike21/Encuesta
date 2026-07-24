@@ -1,5 +1,12 @@
 FROM php:8.4-cli-bookworm
 
+RUN { \
+        echo 'max_input_vars = 5000'; \
+        echo 'max_file_uploads = 100'; \
+        echo 'post_max_size = 24M'; \
+        echo 'upload_max_filesize = 2M'; \
+    } > /usr/local/etc/php/conf.d/zz-survey-limits.ini
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git unzip libzip-dev libonig-dev libpng-dev libjpeg62-turbo-dev \
     && docker-php-ext-configure gd --with-jpeg \
