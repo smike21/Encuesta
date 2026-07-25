@@ -6,6 +6,7 @@ use App\Http\Controllers\SurveyorController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SurveyController::class, 'index'])->name('surveys.index');
+Route::get('/investigacion', function () { return view('market-research.index'); })->name('market-research.index');
 Route::get('/encuestas/{survey}', [SurveyController::class, 'show'])->name('surveys.show');
 Route::post('/encuestas/{survey}', [SurveyController::class, 'submit'])->name('surveys.submit');
 Route::get('/admin/login', [AdminController::class, 'loginForm'])->name('admin.login');
