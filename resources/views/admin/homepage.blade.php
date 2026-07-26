@@ -16,14 +16,21 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Transición</label>
-        <div class="d-flex gap-3 align-items-center">
-            <select name="transition" id="transition" class="form-select">
-                <option value="fade" {{ ($homepage['transition'] ?? 'fade') == 'fade' ? 'selected':'' }}>Fundido</option>
-                <option value="slide" {{ ($homepage['transition'] ?? '') == 'slide' ? 'selected':'' }}>Deslizamiento</option>
-            </select>
-            <label class="small">Velocidad (segundos)</label>
-            <input type="number" name="speed" min="1" max="30" value="{{ $homepage['speed'] ?? 4 }}" class="form-control" style="width:80px">
+        <label class="form-label">Opciones por modo</label>
+        <div id="mode-options">
+            <div id="mode-options-slideshow" style="display:{{ (old('mode',$homepage['mode'] ?? '') == 'slideshow') ? 'block' : 'none' }};">
+                <div class="d-flex gap-3 align-items-center">
+                    <select name="transition" id="transition" class="form-select">
+                        <option value="fade" {{ ($homepage['transition'] ?? 'fade') == 'fade' ? 'selected':'' }}>Fundido</option>
+                        <option value="slide" {{ ($homepage['transition'] ?? '') == 'slide' ? 'selected':'' }}>Deslizamiento</option>
+                    </select>
+                    <label class="small">Velocidad (segundos)</label>
+                    <input type="number" name="speed" id="speed" min="1" max="30" value="{{ $homepage['speed'] ?? 4 }}" class="form-control" style="width:80px">
+                </div>
+            </div>
+            <div id="mode-options-collage" style="display:{{ (old('mode',$homepage['mode'] ?? '') == 'collage') ? 'block' : 'none' }};">
+                <div class="small text-muted">No hay opciones adicionales para Collage por ahora.</div>
+            </div>
         </div>
     </div>
 
@@ -93,15 +100,41 @@
             ];
         @endphp
         <div style="display:flex;flex-direction:column;gap:1rem;">
-            <div style="width:100%;max-width:900px;margin:0 auto;padding:2rem;box-sizing:border-box;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;aspect-ratio:16 / 9;min-height:480px;">
+            <div id="preview-frame" style="width:100%;max-width:900px;margin:0 auto;padding:2rem;box-sizing:border-box;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;aspect-ratio:16 / 9;min-height:480px;">
                 <div style="position:relative;width:100%;aspect-ratio:16 / 9;min-height:480px;">
                     @if(!empty($images))
                         <style>
+                            /* slideshow / collage base */
                             #preview-slideshow img, #preview-collage img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
                             #preview-slideshow img {opacity:0;transition:opacity .9s ease, transform .9s ease;}
                             #preview-slideshow img.active {opacity:1;transform:translateX(0);}
                             #preview-slideshow.slide img {transform:translateX(100%);}
                             #preview-slideshow.slide img.active {transform:translateX(0);}
+
+                            /* Button & logo styles to match public home.blade.php */
+                            #preview-frame .logo-wrapper{position:absolute;left:50%;top:5%;transform:translate(-50%,-50%);} 
+                            #preview-frame img.logo{height:120px;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12));}
+                            #preview-frame .button-layer{position:absolute;inset:0;pointer-events:none}
+                            #preview-frame .page-buttons{position:relative;width:100%;height:100%}
+                            #preview-frame .opt{display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;min-width:200px;box-shadow:0 8px 20px rgba(57,24,0,.06);position:absolute;pointer-events:auto}
+                            #preview-frame .opt:hover{background:#fff4e9;transform:translateY(-3px);transition:transform .18s}
+                            @if(($homepage['mobile_layout'] ?? 'stacked') === 'stacked')
+                            @media (max-width: 767px) {
+                                #preview-frame{padding:1rem}
+                                #preview-frame .logo-wrapper{position:static;transform:none;margin:0 auto}
+                                #preview-frame .button-layer{position:static;pointer-events:auto}
+                                #preview-frame .page-buttons{position:static;display:flex;flex-direction:column;align-items:center;gap:0.9rem;width:100%;max-width:420px;margin:0 auto;padding-top:1rem}
+                                #preview-frame .opt{position:static;transform:none;min-width:auto;width:100%;max-width:100%;border-radius:14px}
+                            }
+                            @else
+                            @media (max-width: 767px) {
+                                #preview-frame{padding:1rem}
+                                #preview-frame .logo-wrapper{position:absolute;left:50%;top:5%;transform:translate(-50%,-50%)}
+                                #preview-frame .button-layer{position:absolute;inset:0;pointer-events:none}
+                                #preview-frame .page-buttons{position:relative;width:100%;height:100%}
+                                #preview-frame .opt{position:absolute;transform:translate(-50%,-50%);min-width:180px;max-width:240px}
+                            }
+                            @endif
                         </style>
                         <div id="preview-slideshow" style="position:absolute;inset:0;z-index:0;overflow:hidden;display:{{ $previewMode === 'slideshow' ? 'block' : 'none' }};">
                             @foreach($images as $i => $img)
@@ -115,12 +148,12 @@
                         </div>
                         <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.22));pointer-events:none;z-index:1;"></div>
                     @endif
-                    <div id="preview-logo-container" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);z-index:2;">
-                        <img id="preview-logo-img" src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:220px;object-fit:contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div id="preview-logo-container" class="logo-wrapper" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);z-index:2;">
+                        <img id="preview-logo-img" class="logo" src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:220px;object-fit:contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                         <span id="preview-logo-text" class="small text-muted" style="display:none;">Logo</span>
                     </div>
                     @foreach($buttons as $key => $button)
-                        <div id="preview-{{ $key }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;min-width:200px;padding:1rem 1.25rem;background:#b95712;color:#fff;border-radius:14px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 8px 20px rgba(57,24,0,.06);">{{ $button['label'] }}</div>
+                        <a id="preview-{{ $key }}" class="opt" href="{{ $button['url'] ?? '#' }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);min-width:200px;padding:1rem 1.25rem;background:#b95712;color:#fff;border-radius:14px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 8px 20px rgba(57,24,0,.06);">{{ $button['label'] }}</a>
                     @endforeach
                 </div>
             </div>
@@ -363,7 +396,17 @@
         }
     }
 
-    modeInputs.forEach(input => input.addEventListener('change', updatePreviewMode));
+    function updateModeOptions() {
+        const selected = document.querySelector('input[name="mode"]:checked')?.value || 'collage';
+        const slideshowOpts = document.getElementById('mode-options-slideshow');
+        const collageOpts = document.getElementById('mode-options-collage');
+        if (slideshowOpts && collageOpts) {
+            slideshowOpts.style.display = selected === 'slideshow' ? 'block' : 'none';
+            collageOpts.style.display = selected === 'collage' ? 'block' : 'none';
+        }
+    }
+
+    modeInputs.forEach(input => input.addEventListener('change', () => { updatePreviewMode(); updateModeOptions(); }));
     transitionSelect?.addEventListener('change', () => {
         setPreviewTransition(transitionSelect.value);
     });
@@ -375,6 +418,7 @@
 
     updateMobilePreview();
     updatePreviewMode();
+    updateModeOptions();
 </script>
 
 @endsection
