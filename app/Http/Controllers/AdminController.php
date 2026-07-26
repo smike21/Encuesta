@@ -308,8 +308,7 @@ class AdminController extends Controller
             'logo_position.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'logo_position.y' => ['nullable', 'integer', 'min:0', 'max:100'],
             'mobile_layout' => ['nullable', 'in:stacked,absolute'],
-            'collage_rows' => ['nullable', 'integer', 'min:1', 'max:4'],
-            'collage_columns' => ['nullable', 'integer', 'min:1', 'max:6'],
+            'collage_layout' => ['nullable', 'regex:/^[1-4]x[1-6]$/'],
             'button_positions' => ['nullable', 'array'],
             'button_positions.*.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'button_positions.*.y' => ['nullable', 'integer', 'min:0', 'max:100'],
@@ -397,6 +396,8 @@ class AdminController extends Controller
             }
         }
 
+        $collageLayout = $data['collage_layout'] ?? '2x4';
+        [$savedRows, $savedColumns] = explode('x', $collageLayout) + [2, 4];
         $payload = [
             'mode' => $data['mode'],
             'transition' => $data['transition'] ?? 'fade',
@@ -406,8 +407,9 @@ class AdminController extends Controller
             'logo_position' => $logoPosition,
             'logo_height' => $logoHeight,
             'mobile_layout' => $data['mobile_layout'] ?? 'stacked',
-            'collage_rows' => (int) ($data['collage_rows'] ?? 2),
-            'collage_columns' => (int) ($data['collage_columns'] ?? 4),
+            'collage_layout' => $collageLayout,
+            'collage_rows' => (int) $savedRows,
+            'collage_columns' => (int) $savedColumns,
             'updated_at' => now()->toDateTimeString(),
         ];
         // Save canonical copy in storage

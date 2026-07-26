@@ -45,9 +45,11 @@
     @php
         $hpPath = storage_path('app/homepage.json');
         $hp = file_exists($hpPath) ? json_decode(file_get_contents($hpPath), true) : null;
-        $collageRows = max(1, min(4, (int) ($hp['collage_rows'] ?? 2)));
-        $collageColumns = max(1, min(6, (int) ($hp['collage_columns'] ?? 4)));
-        $collageHeight = $collageRows * 140 + ($collageRows - 1) * 6;
+        $collageLayout = $hp['collage_layout'] ?? (($hp['collage_rows'] ?? 2) . 'x' . ($hp['collage_columns'] ?? 4));
+        [$collageRows, $collageColumns] = explode('x', $collageLayout) + [2, 4];
+        $collageRows = max(1, min(4, (int) $collageRows));
+        $collageColumns = max(1, min(6, (int) $collageColumns));
+        $collageLayout = $collageRows . 'x' . $collageColumns;
     @endphp
 
     <div class="box" style="position:relative;overflow:hidden;border-radius:14px;padding:2.5rem;">
@@ -80,7 +82,7 @@
                     </script>
                 </div>
             @else
-                <div style="position:absolute;left:0;top:0;right:0;z-index:0;display:grid;grid-template-columns:repeat({{ $collageColumns }},minmax(0,1fr));grid-auto-rows:1fr;gap:6px;padding:12px;height:{{ $collageHeight }}px;">
+                <div style="position:absolute;left:0;top:0;right:0;bottom:0;z-index:0;display:grid;grid-template-columns:repeat({{ $collageColumns }},minmax(0,1fr));grid-auto-rows:1fr;gap:6px;padding:12px;">
                     @foreach($hp['images'] as $img)
                         <div style="width:100%;height:100%;overflow:hidden;border-radius:0;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;opacity:.95"></div>
                     @endforeach

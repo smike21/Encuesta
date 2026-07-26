@@ -40,22 +40,11 @@
             </div>
             <div id="mode-options-collage" style="display:{{ (old('mode',$homepage['mode'] ?? '') == 'collage') ? 'block' : 'none' }};">
                 <div class="d-flex flex-wrap gap-3 align-items-center">
-                    <label class="form-label" style="flex:1;min-width:220px;">Filas
-                        <select name="collage_rows" id="collage_rows" class="form-select">
-                            @foreach(range(1,4) as $rows)
-                                <option value="{{ $rows }}" {{ (old('collage_rows', $homepage['collage_rows'] ?? 2) == $rows) ? 'selected' : '' }}>{{ $rows }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <label class="form-label" style="flex:1;min-width:220px;">Columnas
-                        <select name="collage_columns" id="collage_columns" class="form-select">
-                            @foreach(range(1,6) as $cols)
-                                <option value="{{ $cols }}" {{ (old('collage_columns', $homepage['collage_columns'] ?? 4) == $cols) ? 'selected' : '' }}>{{ $cols }}</option>
-                            @endforeach
-                        </select>
+                    <label class="form-label" style="flex:1;min-width:220px;">Filas × Columnas
+                        <select name="collage_layout" id="collage_layout" class="form-select" data-initial="{{ $collageLayout }}"></select>
                     </label>
                 </div>
-                <div class="small text-muted">Elige cuántas filas y columnas debe usar el collage; la página se adapta a ese diseño.</div>
+                <div class="small text-muted">Elige el layout ideal según el número de imágenes cargadas. El collage ocupará todo el área disponible.</div>
             </div>
         </div>
     </div>
@@ -97,8 +86,10 @@
         $previewMode = old('mode', $homepage['mode'] ?? 'collage');
         $mobileLayout = old('mobile_layout', $homepage['mobile_layout'] ?? 'stacked');
         $images = $homepage['images'] ?? [];
-        $collageRows = old('collage_rows', $homepage['collage_rows'] ?? 2);
-        $collageColumns = old('collage_columns', $homepage['collage_columns'] ?? 4);
+        $collageLayout = old('collage_layout', data_get($homepage, 'collage_layout', (data_get($homepage, 'collage_rows', 2) . 'x' . data_get($homepage, 'collage_columns', 4))));
+        [$collageRows, $collageColumns] = explode('x', $collageLayout) + [2, 4];
+        $collageRows = (int) $collageRows;
+        $collageColumns = (int) $collageColumns;
     @endphp
     <div class="mb-3">
         <label class="form-label">Tamaño del logo: <span id="logo_height_value">{{ $homepage['logo_height'] ?? 120 }}</span> px</label>
@@ -170,7 +161,7 @@
                                 <img src="{{ $img }}" class="{{ $i===0 ? 'active' : '' }}">
                             @endforeach
                         </div>
-                        <div id="preview-collage" style="position:absolute;inset:0;z-index:0;display:{{ $previewMode === 'slideshow' ? 'none' : 'grid' }};grid-template-columns:repeat({{ $collageColumns }},minmax(0,1fr));grid-auto-rows:1fr;gap:6px;padding:12px;height:{{ $collageRows * 140 + ($collageRows - 1) * 6 }}px;">
+                        <div id="preview-collage" style="position:absolute;inset:0;z-index:0;display:{{ $previewMode === 'slideshow' ? 'none' : 'grid' }};grid-template-columns:repeat({{ $collageColumns }},minmax(0,1fr));grid-auto-rows:1fr;gap:6px;padding:12px;height:100%;width:100%;overflow:hidden;">
                             @foreach($images as $img)
                                 <div style="overflow:hidden;border-radius:12px;min-height:0;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;"></div>
                             @endforeach
@@ -272,6 +263,7 @@
                 return { url: usePlaceholder ? ('__idx:' + (idx ?? '')) : url, keep: !it.classList.contains('removed') };
             });
             document.getElementById('existing_order').value = JSON.stringify(arr);
+            buildCollageOptions();
         }
         list.addEventListener('dragstart', (e)=>{ if(e.target.classList.contains('hp-item')) { dragEl = e.target; e.dataTransfer.effectAllowed='move'; }});
         list.addEventListener('dragover', (e)=>{ e.preventDefault(); const after = e.target.closest('.hp-item'); if(after && after !== dragEl) { list.insertBefore(dragEl, after.nextSibling); }});
@@ -290,6 +282,8 @@
             reader.onload = (ev)=>{ el.innerHTML = '<img src="'+ev.target.result+'" style="width:100%;height:100%;object-fit:cover">'; };
             reader.readAsDataURL(f); preview.appendChild(el);
         });
+        updateExistingOrder();
+        updateCollagePreview();
     });
 
     // Ensure existing_order is up-to-date before submit
@@ -327,8 +321,7 @@
     const previewLogoImg = document.getElementById('preview-logo-img');
     const previewLogoContainer = document.getElementById('preview-logo-container');
     const logoPositionInputs = document.querySelectorAll('.logo-position-input');
-    const collageColumnsSelect = document.getElementById('collage_columns');
-    const collageRowsSelect = document.getElementById('collage_rows');
+    const collageLayoutSelect = document.getElementById('collage_layout');
 
     if (logoHeightInput) {
         logoHeightInput.addEventListener('input', function () {
@@ -342,17 +335,65 @@
         });
     }
 
+    function getAvailableLayouts(imageCount) {
+        const layouts = [];
+        const maxRows = 4;
+        const maxCols = 6;
+        for (let rows = 1; rows <= maxRows; rows++) {
+            for (let cols = 1; cols <= maxCols; cols++) {
+                if (rows * cols >= imageCount && imageCount > 0 && rows * cols <= Math.max(imageCount + 2, imageCount + 4)) {
+                    layouts.push([rows.toString(), cols.toString()]);
+                }
+            }
+        }
+        if (layouts.length === 0) {
+            layouts.push(['1','1']);
+        }
+        layouts.sort((a,b) => {
+            const aCells = parseInt(a[0])*parseInt(a[1]);
+            const bCells = parseInt(b[0])*parseInt(b[1]);
+            const aDiff = aCells - imageCount;
+            const bDiff = bCells - imageCount;
+            if (aDiff !== bDiff) return aDiff - bDiff;
+            if (a[0] !== b[0]) return parseInt(a[0]) - parseInt(b[0]);
+            return parseInt(a[1]) - parseInt(b[1]);
+        });
+        return layouts;
+    }
+
+    function buildCollageOptions() {
+        const count = getCurrentImageCount();
+        const layouts = getAvailableLayouts(count);
+        if (!collageLayoutSelect) return;
+        const currentValue = collageLayoutSelect.value || collageLayoutSelect.dataset.initial || '2x4';
+        collageLayoutSelect.innerHTML = '';
+        layouts.forEach(([rows, cols]) => {
+            const option = document.createElement('option');
+            option.value = rows + 'x' + cols;
+            option.textContent = rows + ' × ' + cols;
+            option.selected = option.value === currentValue;
+            collageLayoutSelect.appendChild(option);
+        });
+        if (!collageLayoutSelect.value && layouts.length) {
+            collageLayoutSelect.value = layouts[0][0] + 'x' + layouts[0][1];
+        }
+    }
+
+    function getCurrentImageCount() {
+        const keptItems = Array.from(document.querySelectorAll('.hp-item')).filter(item => !item.classList.contains('removed')).length;
+        const newImages = document.getElementById('new-images')?.files.length || 0;
+        return keptItems + newImages;
+    }
+
     function updateCollagePreview() {
         const collage = document.getElementById('preview-collage');
         if (!collage) return;
-        const cols = parseInt(collageColumnsSelect?.value || '4', 10);
-        const rows = parseInt(collageRowsSelect?.value || '2', 10);
+        const layout = (collageLayoutSelect?.value || '2x4').split('x');
+        const cols = parseInt(layout[1] || '4', 10);
         collage.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
-        collage.style.height = (rows * 140 + (rows - 1) * 6) + 'px';
     }
 
-    collageColumnsSelect?.addEventListener('change', updateCollagePreview);
-    collageRowsSelect?.addEventListener('change', updateCollagePreview);
+    collageLayoutSelect?.addEventListener('change', updateCollagePreview);
 
     function updateLogoPreview(input) {
         const axis = input.dataset.axis;
@@ -443,7 +484,7 @@
         const collage = document.getElementById('preview-collage');
         if (slideshow && collage) {
             slideshow.style.display = selectedMode === 'slideshow' ? 'block' : 'none';
-            collage.style.display = selectedMode === 'slideshow' ? 'none' : 'flex';
+            collage.style.display = selectedMode === 'slideshow' ? 'none' : 'grid';
         }
         if (selectedMode === 'slideshow') {
             startSlideshowPreview();
@@ -472,8 +513,10 @@
             startSlideshowPreview();
         }
     });
+    collageLayoutSelect?.addEventListener('change', updateCollagePreview);
 
     updateMobilePreview();
+    buildCollageOptions();
     updateCollagePreview();
     updatePreviewMode();
     updateModeOptions();
