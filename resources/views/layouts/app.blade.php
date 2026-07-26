@@ -25,6 +25,25 @@
     @stack('styles')
 </head>
 <body>
+    <nav class="navbar">
+        <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div class="d-flex align-items-center gap-4">
+                <a class="navbar-brand" href="{{ route('home') }}">Encuestas</a>
+            </div>
+            <div>
+                @auth
+                    @if(auth()->user()->is_admin)
+                        <a href="{{ route('admin.dashboard') }}">Panel</a>
+                    @else
+                        <a href="{{ route('surveyor.dashboard') }}">Mis resultados</a>
+                    @endif
+                    <form class="d-inline" method="post" action="{{ route('admin.logout') }}">@csrf <button class="link-button">Salir</button></form>
+                @else
+                    <a href="{{ route('admin.login') }}">Administración</a>
+                @endauth
+            </div>
+        </div>
+    </nav>
     <main class="container">
         @foreach(['success','warning'] as $type)
             @if(session($type))
