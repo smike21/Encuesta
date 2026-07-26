@@ -303,7 +303,7 @@ class AdminController extends Controller
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'existing_order' => ['nullable', 'string', 'max:200000'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
-            'logo_size' => ['nullable', 'in:small,medium,large'],
+            'logo_height' => ['nullable', 'integer', 'min:60', 'max:220'],
             'button_positions' => ['nullable', 'array'],
             'button_positions.*.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'button_positions.*.y' => ['nullable', 'integer', 'min:0', 'max:100'],
@@ -339,9 +339,9 @@ class AdminController extends Controller
         }
 
         $logoHeight = 120; // default
-        if (!empty($data['logo_size'])) {
-            $map = ['small' => 80, 'medium' => 120, 'large' => 160];
-            $logoHeight = $map[$data['logo_size']] ?? 120;
+        if (!empty($data['logo_height'])) {
+            $logoHeight = (int) $data['logo_height'];
+            $logoHeight = min(max($logoHeight, 60), 220);
         }
 
         $defaultButtons = [

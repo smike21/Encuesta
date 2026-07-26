@@ -57,13 +57,9 @@
         <div class="mt-2 small text-muted">Si subes un logo se reemplazará el actual.</div>
     </div>
     <div class="mb-3">
-        <label class="form-label">Tamaño del logo</label>
-        @php $lh = $homepage['logo_height'] ?? 120; $logoSize = $lh <= 90 ? 'small' : ($lh >= 150 ? 'large' : 'medium'); @endphp
-        <select name="logo_size" class="form-select">
-            <option value="small" {{ $logoSize=='small' ? 'selected':'' }}>Pequeño</option>
-            <option value="medium" {{ $logoSize=='medium' ? 'selected':'' }}>Mediano</option>
-            <option value="large" {{ $logoSize=='large' ? 'selected':'' }}>Grande</option>
-        </select>
+        <label class="form-label">Tamaño del logo: <span id="logo_height_value">{{ $homepage['logo_height'] ?? 120 }}</span> px</label>
+        <input type="range" name="logo_height" id="logo_height" min="60" max="220" value="{{ $homepage['logo_height'] ?? 120 }}" class="form-range">
+        <div class="small text-muted">Ajusta el alto del logo en la página principal.</div>
     </div>
     <div class="mb-3">
         <label class="form-label">Posición individual de botones</label>
@@ -77,6 +73,10 @@
         @endphp
         <div style="display:flex;flex-direction:column;gap:1rem;">
             <div style="position:relative;width:100%;min-height:260px;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
+                <div id="preview-logo" style="position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
+                    <img id="preview-logo-img" src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:220px;object-fit:contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span id="preview-logo-text" class="small text-muted" style="display:none;">Logo</span>
+                </div>
                 @foreach($buttons as $key => $button)
                     <div id="preview-{{ $key }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);padding:.55rem 1rem;background:#b95712;color:#fff;border-radius:999px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.12);">{{ $button['label'] }}</div>
                 @endforeach
@@ -156,6 +156,22 @@
     buttonInputs.forEach(input => {
         input.addEventListener('input', () => updatePreview(input));
     });
+
+    const logoHeightInput = document.getElementById('logo_height');
+    const logoHeightValue = document.getElementById('logo_height_value');
+    const previewLogoImg = document.getElementById('preview-logo-img');
+
+    if (logoHeightInput) {
+        logoHeightInput.addEventListener('input', function () {
+            const value = this.value;
+            if (logoHeightValue) {
+                logoHeightValue.textContent = value;
+            }
+            if (previewLogoImg) {
+                previewLogoImg.style.height = value + 'px';
+            }
+        });
+    }
 </script>
 
 @endsection
