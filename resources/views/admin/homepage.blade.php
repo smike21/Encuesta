@@ -7,6 +7,16 @@
 
 <form method="post" action="{{ route('admin.homepage.save') }}" enctype="multipart/form-data" id="homepage-form">
     @csrf
+    @if($errors->any())
+        <div class="alert alert-warning">
+            <ul style="margin:0;padding-left:1.2rem;">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    <div id="saving-indicator" style="display:none;margin-bottom:1rem;" class="alert">Guardando cambios...</div>
     <div class="mb-3">
         <label class="form-label">Modo de presentación</label>
         <div class="d-flex gap-3">
@@ -258,6 +268,12 @@
 
     // Ensure existing_order is up-to-date before submit
     document.getElementById('homepage-form').addEventListener('submit', function(){ if(!document.getElementById('existing_order').value) { document.getElementById('existing_order').value = '[]'; } });
+
+    // Show saving indicator when submitting to help debug silent failures
+    document.getElementById('homepage-form').addEventListener('submit', function(){
+        const ind = document.getElementById('saving-indicator');
+        if (ind) ind.style.display = 'block';
+    });
 
     const buttonInputs = document.querySelectorAll('.button-position-input');
 
