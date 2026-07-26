@@ -11,7 +11,7 @@
         <label class="form-label">Modo de presentación</label>
         <div class="d-flex gap-3">
             <label><input type="radio" name="mode" value="collage" {{ (old('mode',$homepage['mode'] ?? 'collage') == 'collage') ? 'checked':'' }}> Collage</label>
-            <label><input type="radio" name="mode" value="slideshow" {{ (old('mode',$homepage['mode'] ?? '') == 'slideshow') ? 'checked':'' }}> Slideshow</label>
+            <label><input type="radio" name="mode" value="slideshow" {{ (old('mode',$homepage['mode'] ?? '') == 'slideshow') ? 'checked':'' }}> Presentación</label>
         </div>
     </div>
 
@@ -19,8 +19,8 @@
         <label class="form-label">Transición</label>
         <div class="d-flex gap-3 align-items-center">
             <select name="transition" id="transition" class="form-select">
-                <option value="fade" {{ ($homepage['transition'] ?? 'fade') == 'fade' ? 'selected':'' }}>Fade</option>
-                <option value="slide" {{ ($homepage['transition'] ?? '') == 'slide' ? 'selected':'' }}>Slide</option>
+                <option value="fade" {{ ($homepage['transition'] ?? 'fade') == 'fade' ? 'selected':'' }}>Fundido</option>
+                <option value="slide" {{ ($homepage['transition'] ?? '') == 'slide' ? 'selected':'' }}>Deslizamiento</option>
             </select>
             <label class="small">Velocidad (segundos)</label>
             <input type="number" name="speed" min="1" max="30" value="{{ $homepage['speed'] ?? 4 }}" class="form-control" style="width:80px">
@@ -66,16 +66,27 @@
         </select>
     </div>
     <div class="mb-3">
-        <label class="form-label">Posición de botones</label>
-        @php $bp = $homepage['button_position'] ?? 'center'; @endphp
-        <select name="button_position" class="form-select">
-            <option value="center" {{ $bp=='center' ? 'selected':'' }}>Centrado (predeterminado)</option>
-            <option value="top-left" {{ $bp=='top-left' ? 'selected':'' }}>Arriba izquierda</option>
-            <option value="top-right" {{ $bp=='top-right' ? 'selected':'' }}>Arriba derecha</option>
-            <option value="bottom-center" {{ $bp=='bottom-center' ? 'selected':'' }}>Abajo centrado</option>
-            <option value="bottom-left" {{ $bp=='bottom-left' ? 'selected':'' }}>Abajo izquierda</option>
-            <option value="bottom-right" {{ $bp=='bottom-right' ? 'selected':'' }}>Abajo derecha</option>
-        </select>
+        <label class="form-label">Posición libre de botones</label>
+        @php
+            $buttonX = old('button_x', $homepage['button_x'] ?? 50);
+            $buttonY = old('button_y', $homepage['button_y'] ?? 60);
+        @endphp
+        <div style="display:flex;flex-direction:column;gap:.8rem;">
+            <div style="position:relative;width:100%;min-height:180px;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
+                <div id="button-preview" style="position:absolute;left:{{ $buttonX }}%;top:{{ $buttonY }}%;transform:translate(-50%,-50%);">
+                    <div style="display:inline-flex;align-items:center;justify-content:center;padding:.7rem 1rem;background:#b95712;color:#fff;border-radius:999px;font-weight:800;box-shadow:0 8px 20px rgba(0,0,0,.14);">Botones</div>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <label class="form-label" style="flex:1;min-width:180px;">X (%) <span id="button_x_value">{{ $buttonX }}</span>
+                    <input type="range" name="button_x" id="button_x" min="0" max="100" value="{{ $buttonX }}" class="form-range">
+                </label>
+                <label class="form-label" style="flex:1;min-width:180px;">Y (%) <span id="button_y_value">{{ $buttonY }}</span>
+                    <input type="range" name="button_y" id="button_y" min="0" max="100" value="{{ $buttonY }}" class="form-range">
+                </label>
+            </div>
+            <div class="small text-muted">Arrastra los controles para ubicar los botones libremente. Esta posición se guarda en porcentaje de la pantalla.</div>
+        </div>
     </div>
 
     <div class="d-flex gap-2">
@@ -115,6 +126,24 @@
 
     // Ensure existing_order is up-to-date before submit
     document.getElementById('homepage-form').addEventListener('submit', function(){ if(!document.getElementById('existing_order').value) { document.getElementById('existing_order').value = '[]'; } });
+
+    const buttonX = document.getElementById('button_x');
+    const buttonY = document.getElementById('button_y');
+    const buttonPreview = document.getElementById('button-preview');
+    const buttonXValue = document.getElementById('button_x_value');
+    const buttonYValue = document.getElementById('button_y_value');
+
+    function updatePreview() {
+        const x = buttonX.value;
+        const y = buttonY.value;
+        buttonPreview.style.left = x + '%';
+        buttonPreview.style.top = y + '%';
+        buttonXValue.textContent = x;
+        buttonYValue.textContent = y;
+    }
+
+    buttonX.addEventListener('input', updatePreview);
+    buttonY.addEventListener('input', updatePreview);
 </script>
 
 @endsection

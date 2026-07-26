@@ -304,7 +304,8 @@ class AdminController extends Controller
             'existing_order' => ['nullable', 'string', 'max:200000'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
             'logo_size' => ['nullable', 'in:small,medium,large'],
-            'button_position' => ['nullable', 'in:center,top-left,top-right,bottom-center,bottom-left,bottom-right'],
+            'button_x' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'button_y' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
         $existing = [];
@@ -342,12 +343,16 @@ class AdminController extends Controller
             $logoHeight = $map[$data['logo_size']] ?? 120;
         }
 
+        $buttonX = isset($data['button_x']) ? $data['button_x'] : 50;
+        $buttonY = isset($data['button_y']) ? $data['button_y'] : 60;
+
         $payload = [
             'mode' => $data['mode'],
             'transition' => $data['transition'] ?? 'fade',
             'speed' => (int) ($data['speed'] ?? 4),
             'images' => $images,
-            'button_position' => $data['button_position'] ?? 'center',
+            'button_x' => $buttonX,
+            'button_y' => $buttonY,
             'logo_height' => $logoHeight,
             'updated_at' => now()->toDateTimeString(),
         ];

@@ -63,16 +63,19 @@
 
         <div style="position:relative;z-index:2;">
             <a href="{{ route('home') }}"><img class="logo" src="/images/probien-logo.png" alt="PROBIEN" style="height:{{ $hp['logo_height'] ?? 120 }}px"></a>
-            @php
-                $pos = $hp['button_position'] ?? 'center';
-                $posStyles = ['center' => 'justify-content:center;align-items:center;flex-direction:row','top-left' => 'justify-content:flex-start;align-items:flex-start;flex-direction:row','top-right' => 'justify-content:flex-end;align-items:flex-start;flex-direction:row','bottom-center' => 'justify-content:center;align-items:flex-end;flex-direction:row','bottom-left' => 'justify-content:flex-start;align-items:flex-end;flex-direction:row','bottom-right' => 'justify-content:flex-end;align-items:flex-end;flex-direction:row'];
-            @endphp
-            <div class="options" style="display:flex;{{ $posStyles[$pos] ?? $posStyles['center'] }}">
-                <a class="opt" href="/conocenos">Conócenos</a>
-                <a class="opt" href="/eventos">Eventos realizados</a>
-                <a class="opt" href="/servicios">Servicios</a>
-                <a class="opt" href="{{ route('market-research.index') }}">Investigación de Mercados</a>
-            </div>
+        </div>
+        @php
+            $buttonX = $hp['button_x'] ?? null;
+            $buttonY = $hp['button_y'] ?? null;
+            $buttonStyle = $buttonX !== null && $buttonY !== null
++                ? 'position:absolute;left:'.$buttonX.'%;top:'.$buttonY.'%;transform:translate(-50%,-50%);width:min(100%,960px);'
++                : 'position:relative;width:100%;';
+        @endphp
+        <div class="options" style="{{ $buttonStyle }}">
+            <a class="opt" href="/conocenos">Conócenos</a>
+            <a class="opt" href="/eventos">Eventos realizados</a>
+            <a class="opt" href="/servicios">Servicios</a>
+            <a class="opt" href="{{ route('market-research.index') }}">Investigación de Mercados</a>
         </div>
     </div>
 </body>
