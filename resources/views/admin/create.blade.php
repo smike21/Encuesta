@@ -46,6 +46,28 @@
                         <div class="col-md-4"><label class="form-label">Color de texto</label><input class="form-control" type="color" name="text_color" value="#3d2516"></div>
                     </div>
 
+                    <div class="mt-3">
+                        <div class="small text-uppercase fw-bold text-muted">Vista previa</div>
+                        <div id="customization-preview" class="border rounded p-3 mt-2" style="background:#fff7ef; color:#3d2516;">
+                            <div class="card mb-3" style="border-color:#b95712; background:#fff7ef; color:#3d2516;">
+                                <div class="card-body">
+                                    <h5 style="color:#b95712">Bienvenido</h5>
+                                    <p class="mb-0">Tu opinión ayuda mucho.</p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Progreso</span>
+                                    <span>1 / 3</span>
+                                </div>
+                                <div class="progress-preview" style="height:8px; background:#ead8c7; border-radius:999px; overflow:hidden;">
+                                    <div style="height:100%; width:33%; background:#b95712;"></div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" style="background:#b95712; border-color:#b95712;">Enviar respuestas</button>
+                        </div>
+                    </div>
+
                     <div class="form-check form-switch mt-3">
                         <input class="form-check-input" type="checkbox" value="1" name="show_title" id="show_title" checked>
                         <label class="form-check-label" for="show_title">Mostrar título</label>
@@ -293,11 +315,66 @@
         });
     }
 
+    function updateCustomizationPreview() {
+        const form = document.getElementById('survey-form');
+        const preview = document.getElementById('customization-preview');
+        if (!form || !preview) return;
+
+        const welcomeTitle = form.querySelector('[name="welcome_title"]').value || 'Bienvenido';
+        const welcomeText = form.querySelector('[name="welcome_text"]').value || 'Tu opinión ayuda mucho.';
+        const buttonText = form.querySelector('[name="button_text"]').value || 'Enviar respuestas';
+        const primaryColor = form.querySelector('[name="primary_color"]').value || '#b95712';
+        const backgroundColor = form.querySelector('[name="background_color"]').value || '#fff7ef';
+        const textColor = form.querySelector('[name="text_color"]').value || '#3d2516';
+        const showTitle = form.querySelector('[name="show_title"]').checked;
+        const showDescription = form.querySelector('[name="show_description"]').checked;
+        const showProgress = form.querySelector('[name="show_progress"]').checked;
+        const showSubmit = form.querySelector('[name="show_submit_button"]').checked;
+
+        preview.style.backgroundColor = backgroundColor;
+        preview.style.color = textColor;
+        const card = preview.querySelector('.card');
+        if (card) {
+            card.style.backgroundColor = backgroundColor;
+            card.style.color = textColor;
+            card.style.borderColor = primaryColor;
+            const h5 = card.querySelector('h5');
+            if (h5) {
+                h5.style.color = primaryColor;
+                h5.textContent = showTitle ? (welcomeTitle || 'Bienvenido') : 'Bienvenido';
+            }
+            const p = card.querySelector('p');
+            if (p) {
+                p.textContent = welcomeText;
+                p.style.display = showDescription ? '' : 'none';
+            }
+        }
+
+        const smallProgress = preview.querySelector('.mb-3 .small.mb-1');
+        if (smallProgress) smallProgress.style.display = showProgress ? '' : 'none';
+        const progressBarWrap = preview.querySelector('.mb-3 .progress-preview');
+        if (progressBarWrap) progressBarWrap.style.display = showProgress ? '' : 'none';
+
+        const btn = preview.querySelector('button');
+        if (btn) {
+            btn.style.display = showSubmit ? '' : 'none';
+            btn.textContent = buttonText;
+            btn.style.backgroundColor = primaryColor;
+            btn.style.borderColor = primaryColor;
+        }
+    }
+
     document.getElementById('toggle-customization')?.addEventListener('click', function () {
         const panel = document.getElementById('customization-panel');
         const hidden = panel.hidden;
         panel.hidden = !hidden;
         this.textContent = hidden ? 'Ocultar personalización' : 'Mostrar personalización';
+        if (!hidden) updateCustomizationPreview();
+    });
+
+    document.getElementById('survey-form')?.querySelectorAll('[name="welcome_title"], [name="welcome_text"], [name="button_text"], [name="primary_color"], [name="background_color"], [name="text_color"], [name="show_title"], [name="show_description"], [name="show_progress"], [name="show_submit_button"]').forEach((field) => {
+        field.addEventListener('input', updateCustomizationPreview);
+        field.addEventListener('change', updateCustomizationPreview);
     });
 
     document.getElementById('add').addEventListener('click', addQuestion);
