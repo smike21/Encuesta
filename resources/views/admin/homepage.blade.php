@@ -93,26 +93,26 @@
             ];
         @endphp
         <div style="display:flex;flex-direction:column;gap:1rem;">
-            <div style="width:100%;max-width:1200px;margin:0 auto;padding:2rem;box-sizing:border-box;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
-                <div style="position:relative;width:100%;min-height:320px;">
+            <div style="width:100%;max-width:900px;margin:0 auto;padding:2rem;box-sizing:border-box;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;aspect-ratio:16 / 9;min-height:480px;">
+                <div style="position:relative;width:100%;aspect-ratio:16 / 9;min-height:480px;">
                     @if(!empty($images))
-                        @if($previewMode === 'slideshow')
-                            <div id="preview-images" style="position:absolute;inset:0;z-index:0;overflow:hidden;">
-                                <style>
-                                    #preview-images img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;}
-                                    #preview-images img.active {opacity:1;}
-                                </style>
-                                @foreach($images as $i => $img)
-                                    <img src="{{ $img }}" class="{{ $i===0 ? 'active' : '' }}">
-                                @endforeach
-                            </div>
-                        @else
-                            <div id="preview-images" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px;padding:12px;z-index:0;">
-                                @foreach($images as $img)
-                                    <div style="overflow:hidden;border-radius:12px;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;"></div>
-                                @endforeach
-                            </div>
-                        @endif
+                        <style>
+                            #preview-slideshow img, #preview-collage img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+                            #preview-slideshow img {opacity:0;transition:opacity .9s ease, transform .9s ease;}
+                            #preview-slideshow img.active {opacity:1;transform:translateX(0);}
+                            #preview-slideshow.slide img {transform:translateX(100%);}
+                            #preview-slideshow.slide img.active {transform:translateX(0);}
+                        </style>
+                        <div id="preview-slideshow" style="position:absolute;inset:0;z-index:0;overflow:hidden;display:{{ $previewMode === 'slideshow' ? 'block' : 'none' }};">
+                            @foreach($images as $i => $img)
+                                <img src="{{ $img }}" class="{{ $i===0 ? 'active' : '' }}">
+                            @endforeach
+                        </div>
+                        <div id="preview-collage" style="position:absolute;inset:0;z-index:0;display:{{ $previewMode === 'slideshow' ? 'none' : 'grid' }};grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;padding:12px;">
+                            @foreach($images as $img)
+                                <div style="overflow:hidden;border-radius:12px;"><img src="{{ $img }}"></div>
+                            @endforeach
+                        </div>
                         <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.22));pointer-events:none;z-index:1;"></div>
                     @endif
                     <div id="preview-logo-container" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);z-index:2;">
@@ -298,7 +298,83 @@
         input.addEventListener('change', updateMobilePreview);
     });
 
+    const modeInputs = document.querySelectorAll('input[name="mode"]');
+    const transitionSelect = document.querySelector('select[name="transition"]');
+    const speedInput = document.querySelector('input[name="speed"]');
+    let slideshowTimer = null;
+
+    function setPreviewTransition(transition) {
+        const slideshow = document.getElementById('preview-slideshow');
+        if (!slideshow) return;
+        if (transition === 'slide') {
+            slideshow.classList.add('slide');
+        } else {
+            slideshow.classList.remove('slide');
+        }
+    }
+
+    function resetSlideshow() {
+        const slideshow = document.getElementById('preview-slideshow');
+        if (!slideshow) return;
+        const imgs = Array.from(slideshow.querySelectorAll('img'));
+        imgs.forEach((img, index) => {
+            img.classList.toggle('active', index === 0);
+        });
+    }
+
+    function startSlideshowPreview() {
+        const slideshow = document.getElementById('preview-slideshow');
+        if (!slideshow) return;
+        const imgs = Array.from(slideshow.querySelectorAll('img'));
+        if (imgs.length <= 1) return;
+        let index = imgs.findIndex(img => img.classList.contains('active'));
+        if (index < 0) index = 0;
+        const transition = transitionSelect?.value || 'fade';
+        const speed = parseInt(speedInput?.value || '4', 10) * 1000;
+        setPreviewTransition(transition);
+        if (slideshowTimer) clearInterval(slideshowTimer);
+        slideshowTimer = setInterval(() => {
+            imgs[index].classList.remove('active');
+            index = (index + 1) % imgs.length;
+            imgs[index].classList.add('active');
+        }, Math.max(1000, speed));
+    }
+
+    function stopSlideshowPreview() {
+        if (slideshowTimer) {
+            clearInterval(slideshowTimer);
+            slideshowTimer = null;
+        }
+        resetSlideshow();
+    }
+
+    function updatePreviewMode() {
+        const selectedMode = document.querySelector('input[name="mode"]:checked')?.value || 'collage';
+        const slideshow = document.getElementById('preview-slideshow');
+        const collage = document.getElementById('preview-collage');
+        if (slideshow && collage) {
+            slideshow.style.display = selectedMode === 'slideshow' ? 'block' : 'none';
+            collage.style.display = selectedMode === 'slideshow' ? 'none' : 'grid';
+        }
+        if (selectedMode === 'slideshow') {
+            startSlideshowPreview();
+        } else {
+            stopSlideshowPreview();
+        }
+    }
+
+    modeInputs.forEach(input => input.addEventListener('change', updatePreviewMode));
+    transitionSelect?.addEventListener('change', () => {
+        setPreviewTransition(transitionSelect.value);
+    });
+    speedInput?.addEventListener('input', () => {
+        if (document.querySelector('input[name="mode"]:checked')?.value === 'slideshow') {
+            startSlideshowPreview();
+        }
+    });
+
     updateMobilePreview();
+    updatePreviewMode();
 </script>
 
 @endsection
