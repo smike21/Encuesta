@@ -27,25 +27,38 @@
             <div class="border rounded p-3 mb-4">
                 <button type="button" class="btn btn-outline-primary w-100" id="toggle-customization">Mostrar personalización</button>
                 <div id="customization-panel" hidden>
-                    <h2 class="h4 mt-3">Personalización</h2>
-                    <label class="form-label">Título de bienvenida</label>
-                    <input class="form-control mb-3" name="welcome_title" value="{{ old('welcome_title', $survey->welcome_title) }}" placeholder="Bienvenido">
+                    <h2 class="h4 mt-3">Personalización global</h2>
 
-                    <label class="form-label">Texto de bienvenida</label>
-                    <textarea class="form-control mb-3" name="welcome_text" placeholder="Gracias por participar...">{{ old('welcome_text', $survey->welcome_text) }}</textarea>
+                    <label class="form-label">Tipo de letra</label>
+                    <select class="form-select mb-3" name="font_family">
+                        <option value="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" {{ old('font_family', $survey->font_family ?? '') === "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" ? 'selected' : '' }}>Inter / System</option>
+                        <option value="Arial, Helvetica, sans-serif" {{ old('font_family', $survey->font_family ?? '') === 'Arial, Helvetica, sans-serif' ? 'selected' : '' }}>Arial</option>
+                        <option value="Helvetica, Arial, sans-serif" {{ old('font_family', $survey->font_family ?? '') === 'Helvetica, Arial, sans-serif' ? 'selected' : '' }}>Helvetica</option>
+                        <option value="Verdana, Geneva, sans-serif" {{ old('font_family', $survey->font_family ?? '') === 'Verdana, Geneva, sans-serif' ? 'selected' : '' }}>Verdana</option>
+                        <option value="'Times New Roman', Times, serif" {{ old('font_family', $survey->font_family ?? '') === "'Times New Roman', Times, serif" ? 'selected' : '' }}>Times New Roman</option>
+                        <option value="Georgia, 'Times New Roman', Times, serif" {{ old('font_family', $survey->font_family ?? '') === "Georgia, 'Times New Roman', Times, serif" ? 'selected' : '' }}>Georgia</option>
+                        <option value="'Roboto', sans-serif" {{ old('font_family', $survey->font_family ?? '') === "'Roboto', sans-serif" ? 'selected' : '' }}>Roboto</option>
+                        <option value="'Montserrat', sans-serif" {{ old('font_family', $survey->font_family ?? '') === "'Montserrat', sans-serif" ? 'selected' : '' }}>Montserrat</option>
+                    </select>
 
-                    <label class="form-label">Título de cierre</label>
-                    <input class="form-control mb-3" name="thank_you_title" value="{{ old('thank_you_title', $survey->thank_you_title) }}" placeholder="¡Gracias!">
-
-                    <label class="form-label">Texto de cierre</label>
-                    <textarea class="form-control mb-3" name="thank_you_text" placeholder="Tu opinión fue registrada.">{{ old('thank_you_text', $survey->thank_you_text) }}</textarea>
+                    <label class="form-label">Tamaño base del texto</label>
+                    <select class="form-select mb-3" name="font_size">
+                        <option value="14px" {{ old('font_size', $survey->font_size ?? '') === '14px' ? 'selected' : '' }}>Pequeño</option>
+                        <option value="16px" {{ old('font_size', $survey->font_size ?? '16px') === '16px' ? 'selected' : '' }}>Normal</option>
+                        <option value="18px" {{ old('font_size', $survey->font_size ?? '') === '18px' ? 'selected' : '' }}>Grande</option>
+                        <option value="20px" {{ old('font_size', $survey->font_size ?? '') === '20px' ? 'selected' : '' }}>Muy grande</option>
+                    </select>
 
                     <label class="form-label">Texto del botón</label>
                     <input class="form-control mb-3" name="button_text" value="{{ old('button_text', $survey->button_text) }}" placeholder="Enviar respuestas">
 
                     <div class="row g-2">
-                        <div class="col-md-4"><label class="form-label">Color principal</label><input class="form-control" type="color" name="primary_color" value="{{ old('primary_color', $survey->primary_color ?: '#b95712') }}"></div>
-                        <div class="col-md-4"><label class="form-label">Color de fondo</label><input class="form-control" type="color" name="background_color" value="{{ old('background_color', $survey->background_color ?: '#fff7ef') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Color principal</label><input class="form-control" type="color" name="primary_color" value="{{ old('primary_color', $survey->primary_color ?: '#b95712') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Fondo de la página</label><input class="form-control" type="color" name="background_color" value="{{ old('background_color', $survey->background_color ?: '#fff7ef') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Fondo del contenedor</label><input class="form-control" type="color" name="container_background_color" value="{{ old('container_background_color', $survey->container_background_color ?: $survey->background_color ?: '#fff7ef') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Color borde contenedor</label><input class="form-control" type="color" name="container_border_color" value="{{ old('container_border_color', $survey->container_border_color ?: $survey->primary_color ?: '#b95712') }}"></div>
+                    </div>
+                    <div class="row g-2 mt-2">
                         <div class="col-md-4"><label class="form-label">Color de texto</label><input class="form-control" type="color" name="text_color" value="{{ old('text_color', $survey->text_color ?: '#3d2516') }}"></div>
                     </div>
 
@@ -67,7 +80,7 @@
                                     <div style="height:100%; width:33%; background:{{ old('primary_color', $survey->primary_color ?: '#b95712') }};"></div>
                                 </div>
                             </div>
-                            <button class="btn btn-primary" style="background:{{ old('primary_color', $survey->primary_color ?: '#b95712') }}; border-color:{{ old('primary_color', $survey->primary_color ?: '#b95712') }};">{{ old('button_text', $survey->button_text) ?: 'Enviar respuestas' }}</button>
+                            <button type="button" class="btn btn-primary" style="background:{{ old('primary_color', $survey->primary_color ?: '#b95712') }}; border-color:{{ old('primary_color', $survey->primary_color ?: '#b95712') }};">{{ old('button_text', $survey->button_text) ?: 'Enviar respuestas' }}</button>
                         </div>
                     </div>
 
@@ -433,12 +446,16 @@
         const preview = document.getElementById('customization-preview');
         if (!form || !preview) return;
 
-        const welcomeTitle = form.querySelector('[name="welcome_title"]').value || 'Bienvenido';
-        const welcomeText = form.querySelector('[name="welcome_text"]').value || 'Tu opinión ayuda mucho.';
+        const title = form.querySelector('[name="title"]')?.value || 'Encuesta';
+        const description = form.querySelector('[name="description"]')?.value || '';
         const buttonText = form.querySelector('[name="button_text"]').value || 'Enviar respuestas';
         const primaryColor = form.querySelector('[name="primary_color"]').value || '#b95712';
         const backgroundColor = form.querySelector('[name="background_color"]').value || '#fff7ef';
+        const containerBg = form.querySelector('[name="container_background_color"]')?.value || backgroundColor;
+        const containerBorder = form.querySelector('[name="container_border_color"]')?.value || primaryColor;
         const textColor = form.querySelector('[name="text_color"]').value || '#3d2516';
+        const fontFamily = form.querySelector('[name="font_family"]')?.value || '';
+        const fontSize = form.querySelector('[name="font_size"]')?.value || '';
         const showTitle = form.querySelector('[name="show_title"]').checked;
         const showDescription = form.querySelector('[name="show_description"]').checked;
         const showProgress = form.querySelector('[name="show_progress"]').checked;
@@ -446,19 +463,21 @@
 
         preview.style.backgroundColor = backgroundColor;
         preview.style.color = textColor;
+        if (fontFamily) preview.style.fontFamily = fontFamily;
+        if (fontSize) preview.style.fontSize = fontSize;
         const card = preview.querySelector('.card');
         if (card) {
-            card.style.backgroundColor = backgroundColor;
+            card.style.backgroundColor = containerBg;
             card.style.color = textColor;
-            card.style.borderColor = primaryColor;
+            card.style.borderColor = containerBorder;
             const h5 = card.querySelector('h5');
             if (h5) {
                 h5.style.color = primaryColor;
-                h5.textContent = showTitle ? (welcomeTitle || 'Bienvenido') : 'Bienvenido';
+                h5.textContent = showTitle ? (title || 'Bienvenido') : '';
             }
             const p = card.querySelector('p');
             if (p) {
-                p.textContent = welcomeText;
+                p.textContent = description;
                 p.style.display = showDescription ? '' : 'none';
             }
         }
