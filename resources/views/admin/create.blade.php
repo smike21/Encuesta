@@ -21,44 +21,47 @@
             <label class="form-label">Descripción</label>
             <textarea class="form-control mb-3" name="description"></textarea>
 
-            <h2 class="h4">Personalización</h2>
             <div class="border rounded p-3 mb-4">
-                <label class="form-label">Título de bienvenida</label>
-                <input class="form-control mb-3" name="welcome_title" placeholder="Bienvenido">
+                <button type="button" class="btn btn-outline-primary w-100" id="toggle-customization">Mostrar personalización</button>
+                <div id="customization-panel" hidden>
+                    <h2 class="h4 mt-3">Personalización</h2>
+                    <label class="form-label">Título de bienvenida</label>
+                    <input class="form-control mb-3" name="welcome_title" placeholder="Bienvenido">
 
-                <label class="form-label">Texto de bienvenida</label>
-                <textarea class="form-control mb-3" name="welcome_text" placeholder="Gracias por participar..."></textarea>
+                    <label class="form-label">Texto de bienvenida</label>
+                    <textarea class="form-control mb-3" name="welcome_text" placeholder="Gracias por participar..."></textarea>
 
-                <label class="form-label">Título de cierre</label>
-                <input class="form-control mb-3" name="thank_you_title" placeholder="¡Gracias!">
+                    <label class="form-label">Título de cierre</label>
+                    <input class="form-control mb-3" name="thank_you_title" placeholder="¡Gracias!">
 
-                <label class="form-label">Texto de cierre</label>
-                <textarea class="form-control mb-3" name="thank_you_text" placeholder="Tu opinión fue registrada."></textarea>
+                    <label class="form-label">Texto de cierre</label>
+                    <textarea class="form-control mb-3" name="thank_you_text" placeholder="Tu opinión fue registrada."></textarea>
 
-                <label class="form-label">Texto del botón</label>
-                <input class="form-control mb-3" name="button_text" placeholder="Enviar respuestas">
+                    <label class="form-label">Texto del botón</label>
+                    <input class="form-control mb-3" name="button_text" placeholder="Enviar respuestas">
 
-                <div class="row g-2">
-                    <div class="col-md-4"><label class="form-label">Color principal</label><input class="form-control" type="color" name="primary_color" value="#b95712"></div>
-                    <div class="col-md-4"><label class="form-label">Color de fondo</label><input class="form-control" type="color" name="background_color" value="#fff7ef"></div>
-                    <div class="col-md-4"><label class="form-label">Color de texto</label><input class="form-control" type="color" name="text_color" value="#3d2516"></div>
-                </div>
+                    <div class="row g-2">
+                        <div class="col-md-4"><label class="form-label">Color principal</label><input class="form-control" type="color" name="primary_color" value="#b95712"></div>
+                        <div class="col-md-4"><label class="form-label">Color de fondo</label><input class="form-control" type="color" name="background_color" value="#fff7ef"></div>
+                        <div class="col-md-4"><label class="form-label">Color de texto</label><input class="form-control" type="color" name="text_color" value="#3d2516"></div>
+                    </div>
 
-                <div class="form-check form-switch mt-3">
-                    <input class="form-check-input" type="checkbox" value="1" name="show_title" id="show_title" checked>
-                    <label class="form-check-label" for="show_title">Mostrar título</label>
-                </div>
-                <div class="form-check form-switch mt-2">
-                    <input class="form-check-input" type="checkbox" value="1" name="show_description" id="show_description" checked>
-                    <label class="form-check-label" for="show_description">Mostrar descripción</label>
-                </div>
-                <div class="form-check form-switch mt-2">
-                    <input class="form-check-input" type="checkbox" value="1" name="show_progress" id="show_progress" checked>
-                    <label class="form-check-label" for="show_progress">Mostrar progreso</label>
-                </div>
-                <div class="form-check form-switch mt-2">
-                    <input class="form-check-input" type="checkbox" value="1" name="show_submit_button" id="show_submit_button" checked>
-                    <label class="form-check-label" for="show_submit_button">Mostrar botón de envío</label>
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_title" id="show_title" checked>
+                        <label class="form-check-label" for="show_title">Mostrar título</label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_description" id="show_description" checked>
+                        <label class="form-check-label" for="show_description">Mostrar descripción</label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_progress" id="show_progress" checked>
+                        <label class="form-check-label" for="show_progress">Mostrar progreso</label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_submit_button" id="show_submit_button" checked>
+                        <label class="form-check-label" for="show_submit_button">Mostrar botón de envío</label>
+                    </div>
                 </div>
             </div>
 
@@ -289,6 +292,13 @@
             button.addEventListener('click', () => button.closest('.option-row').remove());
         });
     }
+
+    document.getElementById('toggle-customization')?.addEventListener('click', function () {
+        const panel = document.getElementById('customization-panel');
+        const hidden = panel.hidden;
+        panel.hidden = !hidden;
+        this.textContent = hidden ? 'Ocultar personalización' : 'Mostrar personalización';
+    });
 
     document.getElementById('add').addEventListener('click', addQuestion);
     addQuestion();
