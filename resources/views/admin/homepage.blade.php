@@ -7,6 +7,15 @@
 
 <form method="post" action="{{ route('admin.homepage.save') }}" enctype="multipart/form-data" id="homepage-form">
     @csrf
+    @php
+        $previewMode = old('mode', $homepage['mode'] ?? 'collage');
+        $mobileLayout = old('mobile_layout', $homepage['mobile_layout'] ?? 'stacked');
+        $images = $homepage['images'] ?? [];
+        $collageLayout = old('collage_layout', data_get($homepage, 'collage_layout', (data_get($homepage, 'collage_rows', 2) . 'x' . data_get($homepage, 'collage_columns', 4))));
+        [$collageRows, $collageColumns] = explode('x', $collageLayout) + [2, 4];
+        $collageRows = (int) $collageRows;
+        $collageColumns = (int) $collageColumns;
+    @endphp
     @if($errors->any())
         <div class="alert alert-warning">
             <ul style="margin:0;padding-left:1.2rem;">
