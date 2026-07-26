@@ -49,7 +49,7 @@
         <input type="hidden" name="existing_order" id="existing_order" value="">
         <div id="existing-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
             @foreach($homepage['images'] ?? [] as $i => $img)
-                <div class="card hp-item" draggable="true" data-url="{{ $img }}" style="position:relative;">
+                <div class="card hp-item" draggable="true" data-url="{{ $img }}" data-index="{{ $i }}" style="position:relative;">
                     <div class="card-body text-center p-2"><img src="{{ $img }}" style="max-width:100%;height:120px;object-fit:cover;border-radius:6px;"></div>
                     <div class="card-footer d-flex justify-content-between align-items-center">
                         <small class="small text-muted">Arrastrar</small>
@@ -244,7 +244,14 @@
         let dragEl = null;
         function updateExistingOrder(){
             const items = Array.from(list.querySelectorAll('.hp-item'));
-            const arr = items.map(it => ({url: it.dataset.url, keep: !it.classList.contains('removed')}));
+            const arr = items.map(it => {
+                const url = it.dataset.url || '';
+                const idx = it.dataset.index;
+                // Avoid embedding large data: URIs in the hidden JSON. Use a compact index placeholder
+                // when the URL looks like a data URI or is very long.
+                const usePlaceholder = url.startsWith('data:') || url.length > 2000;
+                return { url: usePlaceholder ? ('__idx:' + (idx ?? '')) : url, keep: !it.classList.contains('removed') };
+            });
             document.getElementById('existing_order').value = JSON.stringify(arr);
         }
         list.addEventListener('dragstart', (e)=>{ if(e.target.classList.contains('hp-item')) { dragEl = e.target; e.dataTransfer.effectAllowed='move'; }});

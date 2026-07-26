@@ -314,11 +314,29 @@ class AdminController extends Controller
         ]);
 
         $existing = [];
+        // Load prior saved homepage images so we can resolve compact index references
+        $currentImages = [];
+        $currentPath = storage_path('app/homepage.json');
+        if (file_exists($currentPath)) {
+            $curr = json_decode(file_get_contents($currentPath), true);
+            if (is_array($curr) && !empty($curr['images']) && is_array($curr['images'])) $currentImages = array_values($curr['images']);
+        }
         if (!empty($data['existing_order'])) {
             $decoded = json_decode($data['existing_order'], true);
             if (is_array($decoded)) {
                 foreach ($decoded as $item) {
-                    if (!empty($item['keep']) && !empty($item['url'])) $existing[] = $item['url'];
+                    if (empty($item['keep'])) continue;
+                    $url = $item['url'] ?? null;
+                    if (! $url) continue;
+                    if (is_string($url) && str_starts_with($url, '__idx:')) {
+                        $idx = substr($url, strlen('__idx:'));
+                        if (is_numeric($idx) && isset($currentImages[(int)$idx])) {
+                            $existing[] = $currentImages[(int)$idx];
+                        }
+                        // otherwise skip unknown placeholder
+                    } else {
+                        $existing[] = $url;
+                    }
                 }
             }
         }
