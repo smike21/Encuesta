@@ -68,8 +68,8 @@
             $buttonX = $hp['button_x'] ?? null;
             $buttonY = $hp['button_y'] ?? null;
             $buttonStyle = $buttonX !== null && $buttonY !== null
-+                ? 'position:absolute;left:'.$buttonX.'%;top:'.$buttonY.'%;transform:translate(-50%,-50%);width:min(100%,960px);'
-+                : 'position:relative;width:100%;';
+                ? 'position:absolute;left:'.$buttonX.'%;top:'.$buttonY.'%;transform:translate(-50%,-50%);width:min(100%,960px);'
+                : 'position:relative;width:100%;';
         @endphp
         <div class="options" style="{{ $buttonStyle }}">
             <a class="opt" href="/conocenos">Conócenos</a>
