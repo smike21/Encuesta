@@ -77,7 +77,11 @@
 
     <div class="mb-3">
         <label class="form-label">Subir nuevas imágenes (múltiples)</label>
-        <input type="file" name="images[]" id="new-images" multiple accept="image/*" class="form-control">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="file" name="images[]" id="new-images" multiple accept="image/*" class="form-control">
+            <button type="button" id="generate-layouts" class="btn btn-outline-secondary" style="display:none;white-space:nowrap;">Generar combinaciones de lista</button>
+        </div>
+        <div id="generate-layouts-note" class="small text-muted" style="display:none;">Genera las opciones de filas × columnas disponibles para el collage.</div>
         <div id="preview" style="margin-top:.75rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px"></div>
     </div>
 
