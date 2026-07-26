@@ -294,6 +294,7 @@
         });
         updateExistingOrder();
         updateCollagePreview();
+        updateModeOptions();
     });
 
     // Ensure existing_order is up-to-date before submit
