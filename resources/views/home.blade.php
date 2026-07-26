@@ -63,19 +63,25 @@
 
         <div style="position:relative;z-index:2;">
             <a href="{{ route('home') }}"><img class="logo" src="/images/probien-logo.png" alt="PROBIEN" style="height:{{ $hp['logo_height'] ?? 120 }}px"></a>
-        </div>
-        @php
-            $buttonX = $hp['button_x'] ?? null;
-            $buttonY = $hp['button_y'] ?? null;
-            $buttonStyle = $buttonX !== null && $buttonY !== null
-                ? 'position:absolute;left:'.$buttonX.'%;top:'.$buttonY.'%;transform:translate(-50%,-50%);width:min(100%,960px);'
-                : 'position:relative;width:100%;';
-        @endphp
-        <div class="options" style="{{ $buttonStyle }}">
-            <a class="opt" href="/conocenos">Conócenos</a>
-            <a class="opt" href="/eventos">Eventos realizados</a>
-            <a class="opt" href="/servicios">Servicios</a>
-            <a class="opt" href="{{ route('market-research.index') }}">Investigación de Mercados</a>
+            @php
+                $buttonPositions = $hp['button_positions'] ?? null;
+                $buttons = [
+                    ['key' => 'conocenos', 'label' => 'Conócenos', 'url' => '/conocenos'],
+                    ['key' => 'eventos', 'label' => 'Eventos realizados', 'url' => '/eventos'],
+                    ['key' => 'servicios', 'label' => 'Servicios', 'url' => '/servicios'],
+                    ['key' => 'market_research', 'label' => 'Investigación de Mercados', 'url' => route('market-research.index')],
+                ];
+            @endphp
+            <div style="position:relative;width:100%;min-height:320px;">
+                @foreach($buttons as $button)
+                    @php
+                        $position = $buttonPositions[$button['key']] ?? null;
+                        $x = $position['x'] ?? 50;
+                        $y = $position['y'] ?? 60;
+                    @endphp
+                    <a class="opt" href="{{ $button['url'] }}" style="position:absolute;left:{{ $x }}%;top:{{ $y }}%;transform:translate(-50%,-50%);">{{ $button['label'] }}</a>
+                @endforeach
+            </div>
         </div>
     </div>
 </body>

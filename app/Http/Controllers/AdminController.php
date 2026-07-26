@@ -304,8 +304,9 @@ class AdminController extends Controller
             'existing_order' => ['nullable', 'string', 'max:200000'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
             'logo_size' => ['nullable', 'in:small,medium,large'],
-            'button_x' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'button_y' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'button_positions' => ['nullable', 'array'],
+            'button_positions.*.x' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'button_positions.*.y' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
         $existing = [];
@@ -343,16 +344,31 @@ class AdminController extends Controller
             $logoHeight = $map[$data['logo_size']] ?? 120;
         }
 
-        $buttonX = isset($data['button_x']) ? $data['button_x'] : 50;
-        $buttonY = isset($data['button_y']) ? $data['button_y'] : 60;
+        $defaultButtons = [
+            'conocenos' => ['x' => 40, 'y' => 35],
+            'eventos' => ['x' => 70, 'y' => 35],
+            'servicios' => ['x' => 40, 'y' => 55],
+            'market_research' => ['x' => 70, 'y' => 55],
+        ];
+
+        $buttonPositions = $defaultButtons;
+        if (!empty($data['button_positions']) && is_array($data['button_positions'])) {
+            foreach ($buttonPositions as $key => $position) {
+                if (isset($data['button_positions'][$key]['x'])) {
+                    $buttonPositions[$key]['x'] = (int) $data['button_positions'][$key]['x'];
+                }
+                if (isset($data['button_positions'][$key]['y'])) {
+                    $buttonPositions[$key]['y'] = (int) $data['button_positions'][$key]['y'];
+                }
+            }
+        }
 
         $payload = [
             'mode' => $data['mode'],
             'transition' => $data['transition'] ?? 'fade',
             'speed' => (int) ($data['speed'] ?? 4),
             'images' => $images,
-            'button_x' => $buttonX,
-            'button_y' => $buttonY,
+            'button_positions' => $buttonPositions,
             'logo_height' => $logoHeight,
             'updated_at' => now()->toDateTimeString(),
         ];

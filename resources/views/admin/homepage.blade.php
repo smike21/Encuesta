@@ -66,26 +66,35 @@
         </select>
     </div>
     <div class="mb-3">
-        <label class="form-label">Posición libre de botones</label>
+        <label class="form-label">Posición individual de botones</label>
         @php
-            $buttonX = old('button_x', $homepage['button_x'] ?? 50);
-            $buttonY = old('button_y', $homepage['button_y'] ?? 60);
+            $buttons = [
+                'conocenos' => ['label' => 'Conócenos', 'x' => old('button_positions.conocenos.x', $homepage['button_positions']['conocenos']['x'] ?? 40), 'y' => old('button_positions.conocenos.y', $homepage['button_positions']['conocenos']['y'] ?? 35)],
+                'eventos' => ['label' => 'Eventos realizados', 'x' => old('button_positions.eventos.x', $homepage['button_positions']['eventos']['x'] ?? 70), 'y' => old('button_positions.eventos.y', $homepage['button_positions']['eventos']['y'] ?? 35)],
+                'servicios' => ['label' => 'Servicios', 'x' => old('button_positions.servicios.x', $homepage['button_positions']['servicios']['x'] ?? 40), 'y' => old('button_positions.servicios.y', $homepage['button_positions']['servicios']['y'] ?? 55)],
+                'market_research' => ['label' => 'Investigación de Mercados', 'x' => old('button_positions.market_research.x', $homepage['button_positions']['market_research']['x'] ?? 70), 'y' => old('button_positions.market_research.y', $homepage['button_positions']['market_research']['y'] ?? 55)],
+            ];
         @endphp
-        <div style="display:flex;flex-direction:column;gap:.8rem;">
-            <div style="position:relative;width:100%;min-height:180px;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
-                <div id="button-preview" style="position:absolute;left:{{ $buttonX }}%;top:{{ $buttonY }}%;transform:translate(-50%,-50%);">
-                    <div style="display:inline-flex;align-items:center;justify-content:center;padding:.7rem 1rem;background:#b95712;color:#fff;border-radius:999px;font-weight:800;box-shadow:0 8px 20px rgba(0,0,0,.14);">Botones</div>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div style="position:relative;width:100%;min-height:260px;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
+                @foreach($buttons as $key => $button)
+                    <div id="preview-{{ $key }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);padding:.55rem 1rem;background:#b95712;color:#fff;border-radius:999px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.12);">{{ $button['label'] }}</div>
+                @endforeach
+            </div>
+            @foreach($buttons as $key => $button)
+                <div class="mb-2" style="padding:1rem;border:1px solid #e9e0d3;border-radius:14px;background:#fff;">
+                    <strong>{{ $button['label'] }}</strong>
+                    <div class="d-flex flex-wrap gap-3 align-items-center mt-2">
+                        <label class="form-label" style="flex:1;min-width:180px;">X (%) <span id="{{ $key }}_x_value">{{ $button['x'] }}</span>
+                            <input type="range" name="button_positions[{{ $key }}][x]" id="{{ $key }}_x" min="0" max="100" value="{{ $button['x'] }}" class="form-range button-position-input" data-key="{{ $key }}" data-axis="x">
+                        </label>
+                        <label class="form-label" style="flex:1;min-width:180px;">Y (%) <span id="{{ $key }}_y_value">{{ $button['y'] }}</span>
+                            <input type="range" name="button_positions[{{ $key }}][y]" id="{{ $key }}_y" min="0" max="100" value="{{ $button['y'] }}" class="form-range button-position-input" data-key="{{ $key }}" data-axis="y">
+                        </label>
+                    </div>
                 </div>
-            </div>
-            <div class="d-flex flex-wrap gap-3 align-items-center">
-                <label class="form-label" style="flex:1;min-width:180px;">X (%) <span id="button_x_value">{{ $buttonX }}</span>
-                    <input type="range" name="button_x" id="button_x" min="0" max="100" value="{{ $buttonX }}" class="form-range">
-                </label>
-                <label class="form-label" style="flex:1;min-width:180px;">Y (%) <span id="button_y_value">{{ $buttonY }}</span>
-                    <input type="range" name="button_y" id="button_y" min="0" max="100" value="{{ $buttonY }}" class="form-range">
-                </label>
-            </div>
-            <div class="small text-muted">Arrastra los controles para ubicar los botones libremente. Esta posición se guarda en porcentaje de la pantalla.</div>
+            @endforeach
+            <div class="small text-muted">Ajusta la posición de cada botón individualmente. Los valores se guardan en porcentaje para adaptarse al tamaño de pantalla.</div>
         </div>
     </div>
 
@@ -127,23 +136,26 @@
     // Ensure existing_order is up-to-date before submit
     document.getElementById('homepage-form').addEventListener('submit', function(){ if(!document.getElementById('existing_order').value) { document.getElementById('existing_order').value = '[]'; } });
 
-    const buttonX = document.getElementById('button_x');
-    const buttonY = document.getElementById('button_y');
-    const buttonPreview = document.getElementById('button-preview');
-    const buttonXValue = document.getElementById('button_x_value');
-    const buttonYValue = document.getElementById('button_y_value');
+    const buttonInputs = document.querySelectorAll('.button-position-input');
 
-    function updatePreview() {
-        const x = buttonX.value;
-        const y = buttonY.value;
-        buttonPreview.style.left = x + '%';
-        buttonPreview.style.top = y + '%';
-        buttonXValue.textContent = x;
-        buttonYValue.textContent = y;
+    function updatePreview(input) {
+        const key = input.dataset.key;
+        const axis = input.dataset.axis;
+        const value = input.value;
+        const preview = document.getElementById('preview-' + key);
+        const valueDisplay = document.getElementById(key + '_' + axis + '_value');
+        if (preview) {
+            if (axis === 'x') preview.style.left = value + '%';
+            if (axis === 'y') preview.style.top = value + '%';
+        }
+        if (valueDisplay) {
+            valueDisplay.textContent = value;
+        }
     }
 
-    buttonX.addEventListener('input', updatePreview);
-    buttonY.addEventListener('input', updatePreview);
+    buttonInputs.forEach(input => {
+        input.addEventListener('input', () => updatePreview(input));
+    });
 </script>
 
 @endsection
