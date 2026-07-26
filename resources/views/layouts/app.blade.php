@@ -31,10 +31,7 @@
                 <img src="/images/probien-logo.png" alt="Asociación Civil PROBIEN" style="height:48px;object-fit:contain;">
             </a>
             <div class="d-flex gap-4 align-items-center" style="font-weight:700;">
-                <a href="/conocenos">Conócenos</a>
-                <a href="/eventos">Eventos realizados</a>
-                <a href="/servicios">Servicios</a>
-                <a href="{{ route('market-research.index') }}">Investigación de Mercados</a>
+                <a href="{{ route('surveys.index') }}">Encuestas</a>
             </div>
         </div>
         <div>

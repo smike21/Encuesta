@@ -5,12 +5,8 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\SurveyorController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () { return view('home'); })->name('home');
+Route::get('/', [SurveyController::class, 'index'])->name('home');
 Route::get('/encuestas', [SurveyController::class, 'index'])->name('surveys.index');
-Route::get('/investigacion', function () { return view('market-research.index'); })->name('market-research.index');
-Route::view('/conocenos', 'conocenos')->name('conocenos');
-Route::view('/eventos', 'eventos')->name('eventos');
-Route::view('/servicios', 'servicios')->name('servicios');
 Route::get('/encuestas/{survey}', [SurveyController::class, 'show'])->name('surveys.show');
 Route::post('/encuestas/{survey}', [SurveyController::class, 'submit'])->name('surveys.submit');
 Route::get('/admin/login', [AdminController::class, 'loginForm'])->name('admin.login');
@@ -33,7 +29,5 @@ Route::get('/admin/encuestas/{survey}/exportar', [AdminController::class, 'expor
 Route::patch('/admin/encuestas/{survey}/estado', [AdminController::class, 'toggle'])->name('admin.toggle');
 Route::delete('/admin/encuestas/{survey}', [AdminController::class, 'destroy'])->name('admin.destroy');
 Route::get('/admin/setup', [AdminController::class, 'setup'])->name('admin.setup');
-Route::get('/admin/homepage', [AdminController::class, 'homepageSettings'])->name('admin.homepage');
-Route::post('/admin/homepage', [AdminController::class, 'saveHomepageSettings'])->name('admin.homepage.save');
 Route::get('/encuestador', [SurveyorController::class, 'dashboard'])->name('surveyor.dashboard');
 Route::get('/encuestador/encuestas/{survey}/resultados', [SurveyorController::class, 'results'])->name('surveyor.results');
