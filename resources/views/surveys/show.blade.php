@@ -18,11 +18,11 @@
         <div class="card mb-4" style="border-color:{{ $survey->primary_color ?: '#b95712' }}; background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }};">
             <div class="card-body">
                 <h1 style="color:{{ $survey->primary_color ?: '#b95712' }};">{{ $survey->welcome_title ?: $survey->title }}</h1>
-                @if(($survey->show_description ?? true) && $survey->description)
+                @if((($survey->show_description ?? true) && $survey->description) || ((($survey->show_description ?? true) && $survey->welcome_text)))
                     <p class="mb-0">{{ $survey->description }}</p>
-                @endif
-                @if(($survey->show_description ?? true) && $survey->welcome_text)
-                    <p class="mb-0 mt-2">{{ $survey->welcome_text }}</p>
+                    @if(($survey->show_description ?? true) && $survey->welcome_text)
+                        <p class="mb-0 mt-2">{{ $survey->welcome_text }}</p>
+                    @endif
                 @endif
             </div>
         </div>

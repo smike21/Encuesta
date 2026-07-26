@@ -13,7 +13,8 @@ class Survey extends Model
         'title', 'description', 'collect_location', 'is_active', 'user_id',
         'welcome_title', 'welcome_text', 'thank_you_title', 'thank_you_text',
         'primary_color', 'background_color', 'text_color', 'button_text',
-        'show_title', 'show_description', 'show_progress', 'show_submit_button'
+        'show_title', 'show_description', 'show_progress', 'show_submit_button',
+        'survey_image'
     ];
 
     protected function casts(): array
@@ -44,3 +45,4 @@ class Survey extends Model
     public function submissions(): HasMany { return $this->hasMany(SurveySubmission::class); }
     public function surveyors(): BelongsToMany { return $this->belongsToMany(User::class, 'survey_user_accesses')->withTimestamps(); }
 }
+
