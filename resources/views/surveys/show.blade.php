@@ -9,10 +9,24 @@
     </div>
 </div>
 
-<form method="post" action="{{ route('surveys.submit',$survey) }}">
+<form method="post" action="{{ route('surveys.submit',$survey) }}" style="background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }}; border-radius:24px; padding:1rem;">
     @csrf
     <input type="hidden" name="timezone" id="timezone">
     <input type="hidden" name="locale" id="locale">
+
+    @if(($survey->show_title ?? true))
+        <div class="card mb-4" style="border-color:{{ $survey->primary_color ?: '#b95712' }}; background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }};">
+            <div class="card-body">
+                <h1 style="color:{{ $survey->primary_color ?: '#b95712' }};">{{ $survey->welcome_title ?: $survey->title }}</h1>
+                @if(($survey->show_description ?? true) && $survey->description)
+                    <p class="mb-0">{{ $survey->description }}</p>
+                @endif
+                @if(($survey->show_description ?? true) && $survey->welcome_text)
+                    <p class="mb-0 mt-2">{{ $survey->welcome_text }}</p>
+                @endif
+            </div>
+        </div>
+    @endif
 
     @if($survey->collect_location)
         <section class="card mb-3">
@@ -26,8 +40,20 @@
         </section>
     @endif
 
+    @if(($survey->show_progress ?? true) && $survey->questions->count())
+        <div class="mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+                <span>Progreso</span>
+                <span>1 / {{ $survey->questions->count() }}</span>
+            </div>
+            <div style="height:8px; background:#ead8c7; border-radius:999px; overflow:hidden;">
+                <div style="height:100%; width:{{ min(100, round(100 / max(1, $survey->questions->count()))) }}%; background:{{ $survey->primary_color ?: '#b95712' }};"></div>
+            </div>
+        </div>
+    @endif
+
     @foreach($survey->questions as $question)
-        <section class="card mb-3">
+        <section class="card mb-3" style="border-color:{{ $survey->primary_color ?: '#b95712' }}; background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }};">
             <div class="card-body">
                 <label class="form-label fw-bold">{{ $question->text }}</label>
 
@@ -99,7 +125,9 @@
         </section>
     @endforeach
 
-    <button class="btn btn-primary btn-lg">Enviar respuestas</button>
+    @if(($survey->show_submit_button ?? true))
+        <button class="btn btn-primary btn-lg" style="background:{{ $survey->primary_color ?: '#b95712' }}; border-color:{{ $survey->primary_color ?: '#b95712' }};">{{ $survey->button_text ?: 'Enviar respuestas' }}</button>
+    @endif
 </form>
 @endsection
 @push('styles')

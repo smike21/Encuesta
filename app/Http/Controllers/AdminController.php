@@ -85,6 +85,18 @@ class AdminController extends Controller
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'collect_location' => $request->boolean('collect_location'),
+            'welcome_title' => $data['welcome_title'] ?? null,
+            'welcome_text' => $data['welcome_text'] ?? null,
+            'thank_you_title' => $data['thank_you_title'] ?? null,
+            'thank_you_text' => $data['thank_you_text'] ?? null,
+            'primary_color' => $data['primary_color'] ?? null,
+            'background_color' => $data['background_color'] ?? null,
+            'text_color' => $data['text_color'] ?? null,
+            'button_text' => $data['button_text'] ?? null,
+            'show_title' => $request->boolean('show_title', true),
+            'show_description' => $request->boolean('show_description', true),
+            'show_progress' => $request->boolean('show_progress', true),
+            'show_submit_button' => $request->boolean('show_submit_button', true),
         ]);
 
         $position = 0;
@@ -161,6 +173,18 @@ class AdminController extends Controller
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'collect_location' => $request->boolean('collect_location'),
+            'welcome_title' => $data['welcome_title'] ?? null,
+            'welcome_text' => $data['welcome_text'] ?? null,
+            'thank_you_title' => $data['thank_you_title'] ?? null,
+            'thank_you_text' => $data['thank_you_text'] ?? null,
+            'primary_color' => $data['primary_color'] ?? null,
+            'background_color' => $data['background_color'] ?? null,
+            'text_color' => $data['text_color'] ?? null,
+            'button_text' => $data['button_text'] ?? null,
+            'show_title' => $request->boolean('show_title', true),
+            'show_description' => $request->boolean('show_description', true),
+            'show_progress' => $request->boolean('show_progress', true),
+            'show_submit_button' => $request->boolean('show_submit_button', true),
         ]);
 
         // Update existing questions in place. Deleting and recreating them here
