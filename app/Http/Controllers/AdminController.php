@@ -308,8 +308,8 @@ class AdminController extends Controller
             'logo_position.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'logo_position.y' => ['nullable', 'integer', 'min:0', 'max:100'],
             'mobile_layout' => ['nullable', 'in:stacked,absolute'],
-            'collage_item_size' => ['nullable', 'integer', 'in:120,140,160,180,200,240'],
-            'collage_height' => ['nullable', 'integer', 'min:260', 'max:720'],
+            'collage_rows' => ['nullable', 'integer', 'min:1', 'max:4'],
+            'collage_columns' => ['nullable', 'integer', 'min:1', 'max:6'],
             'button_positions' => ['nullable', 'array'],
             'button_positions.*.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'button_positions.*.y' => ['nullable', 'integer', 'min:0', 'max:100'],
@@ -406,8 +406,8 @@ class AdminController extends Controller
             'logo_position' => $logoPosition,
             'logo_height' => $logoHeight,
             'mobile_layout' => $data['mobile_layout'] ?? 'stacked',
-            'collage_item_size' => (int) ($data['collage_item_size'] ?? 200),
-            'collage_height' => (int) ($data['collage_height'] ?? 420),
+            'collage_rows' => (int) ($data['collage_rows'] ?? 2),
+            'collage_columns' => (int) ($data['collage_columns'] ?? 4),
             'updated_at' => now()->toDateTimeString(),
         ];
         // Save canonical copy in storage

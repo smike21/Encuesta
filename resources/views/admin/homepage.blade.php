@@ -40,18 +40,22 @@
             </div>
             <div id="mode-options-collage" style="display:{{ (old('mode',$homepage['mode'] ?? '') == 'collage') ? 'block' : 'none' }};">
                 <div class="d-flex flex-wrap gap-3 align-items-center">
-                    <label class="form-label" style="flex:1;min-width:220px;">Tamaño miniatura
-                        <select name="collage_item_size" class="form-select">
-                            @foreach([120 => '120 px', 140 => '140 px', 160 => '160 px', 180 => '180 px', 200 => '200 px', 240 => '240 px'] as $size => $label)
-                                <option value="{{ $size }}" {{ (old('collage_item_size', $homepage['collage_item_size'] ?? 200) == $size) ? 'selected' : '' }}>{{ $label }}</option>
+                    <label class="form-label" style="flex:1;min-width:220px;">Filas
+                        <select name="collage_rows" id="collage_rows" class="form-select">
+                            @foreach(range(1,4) as $rows)
+                                <option value="{{ $rows }}" {{ (old('collage_rows', $homepage['collage_rows'] ?? 2) == $rows) ? 'selected' : '' }}>{{ $rows }}</option>
                             @endforeach
                         </select>
                     </label>
-                    <label class="form-label" style="flex:1;min-width:220px;">Altura del collage: <span id="collage_height_value">{{ old('collage_height', $homepage['collage_height'] ?? 420) }}</span> px
-                        <input type="range" name="collage_height" id="collage_height" min="260" max="720" value="{{ old('collage_height', $homepage['collage_height'] ?? 420) }}" class="form-range">
+                    <label class="form-label" style="flex:1;min-width:220px;">Columnas
+                        <select name="collage_columns" id="collage_columns" class="form-select">
+                            @foreach(range(1,6) as $cols)
+                                <option value="{{ $cols }}" {{ (old('collage_columns', $homepage['collage_columns'] ?? 4) == $cols) ? 'selected' : '' }}>{{ $cols }}</option>
+                            @endforeach
+                        </select>
                     </label>
                 </div>
-                <div class="small text-muted">Ajusta el tamaño de cada miniatura y la altura total del collage.</div>
+                <div class="small text-muted">Elige cuántas filas y columnas debe usar el collage; la página se adapta a ese diseño.</div>
             </div>
         </div>
     </div>
@@ -93,8 +97,8 @@
         $previewMode = old('mode', $homepage['mode'] ?? 'collage');
         $mobileLayout = old('mobile_layout', $homepage['mobile_layout'] ?? 'stacked');
         $images = $homepage['images'] ?? [];
-        $collageItemSize = old('collage_item_size', $homepage['collage_item_size'] ?? 200);
-        $collageHeight = old('collage_height', $homepage['collage_height'] ?? 420);
+        $collageRows = old('collage_rows', $homepage['collage_rows'] ?? 2);
+        $collageColumns = old('collage_columns', $homepage['collage_columns'] ?? 4);
     @endphp
     <div class="mb-3">
         <label class="form-label">Tamaño del logo: <span id="logo_height_value">{{ $homepage['logo_height'] ?? 120 }}</span> px</label>
@@ -166,9 +170,9 @@
                                 <img src="{{ $img }}" class="{{ $i===0 ? 'active' : '' }}">
                             @endforeach
                         </div>
-                        <div id="preview-collage" style="position:absolute;inset:0;z-index:0;display:{{ $previewMode === 'slideshow' ? 'none' : 'flex' }};flex-wrap:nowrap;gap:6px;padding:12px;overflow-x:auto;align-items:stretch;height:{{ $collageHeight }}px;">
+                        <div id="preview-collage" style="position:absolute;inset:0;z-index:0;display:{{ $previewMode === 'slideshow' ? 'none' : 'grid' }};grid-template-columns:repeat({{ $collageColumns }},minmax(0,1fr));grid-auto-rows:1fr;gap:6px;padding:12px;height:{{ $collageRows * 140 + ($collageRows - 1) * 6 }}px;">
                             @foreach($images as $img)
-                                <div style="overflow:hidden;border-radius:12px;min-width:{{ $collageItemSize }}px;flex:0 0 {{ $collageItemSize }}px;height:100%;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;"></div>
+                                <div style="overflow:hidden;border-radius:12px;min-height:0;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;"></div>
                             @endforeach
                         </div>
                         <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.22));pointer-events:none;z-index:1;"></div>
@@ -323,9 +327,8 @@
     const previewLogoImg = document.getElementById('preview-logo-img');
     const previewLogoContainer = document.getElementById('preview-logo-container');
     const logoPositionInputs = document.querySelectorAll('.logo-position-input');
-    const collageSizeSelect = document.getElementById('collage_item_size');
-    const collageHeightInput = document.getElementById('collage_height');
-    const collageHeightValue = document.getElementById('collage_height_value');
+    const collageColumnsSelect = document.getElementById('collage_columns');
+    const collageRowsSelect = document.getElementById('collage_rows');
 
     if (logoHeightInput) {
         logoHeightInput.addEventListener('input', function () {
@@ -342,20 +345,14 @@
     function updateCollagePreview() {
         const collage = document.getElementById('preview-collage');
         if (!collage) return;
-        const size = parseInt(collageSizeSelect?.value || '200', 10);
-        const height = parseInt(collageHeightInput?.value || '420', 10);
-        collage.style.height = height + 'px';
-        if (collageHeightValue) {
-            collageHeightValue.textContent = height;
-        }
-        Array.from(collage.children).forEach(child => {
-            child.style.minWidth = size + 'px';
-            child.style.flex = '0 0 ' + size + 'px';
-        });
+        const cols = parseInt(collageColumnsSelect?.value || '4', 10);
+        const rows = parseInt(collageRowsSelect?.value || '2', 10);
+        collage.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+        collage.style.height = (rows * 140 + (rows - 1) * 6) + 'px';
     }
 
-    collageSizeSelect?.addEventListener('change', updateCollagePreview);
-    collageHeightInput?.addEventListener('input', updateCollagePreview);
+    collageColumnsSelect?.addEventListener('change', updateCollagePreview);
+    collageRowsSelect?.addEventListener('change', updateCollagePreview);
 
     function updateLogoPreview(input) {
         const axis = input.dataset.axis;
