@@ -5,13 +5,27 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Página de inicio - PROBIEN</title>
     <style>
-        body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#fff7ef;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#3d2516}
-        .box{width:100%;max-width:1200px;text-align:center;padding:2rem;border-radius:16px;min-height:calc(100vh - 96px);display:flex;align-items:center;justify-content:center}
-        img.logo{height:120px;object-fit:contain;margin-bottom:1.5rem;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}
+        body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff7ef;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#3d2516}
+        .box{width:100%;max-width:1200px;text-align:center;padding:2rem;border-radius:16px;min-height:calc(100vh - 96px);display:flex;align-items:center;justify-content:center;position:relative}
+        .hero-content{position:relative;z-index:2;width:100%;min-height:320px}
+        .logo-wrapper{position:absolute;left:50%;top:5%;transform:translate(-50%, -50%);}
+        img.logo{height:120px;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}
         .options{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-top:1.25rem}
-        .opt{display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;min-width:200px;box-shadow:0 8px 20px rgba(57,24,0,.06)}
+        .opt{display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;min-width:200px;box-shadow:0 8px 20px rgba(57,24,0,.06);position:absolute;pointer-events:auto}
         .opt:hover{background:#fff4e9;transform:translateY(-3px);transition:transform .18s}
+        .button-layer{position:absolute;inset:0;pointer-events:none}
+        .page-buttons{position:relative;width:100%;height:100%}
         .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.22));pointer-events:none}
+        @media (max-width: 767px) {
+            body{align-items:flex-start}
+            .box{padding:1rem;min-height:auto}
+            .hero-content{min-height:auto}
+            .logo-wrapper{position:static;transform:none;margin:0 auto}
+            .button-layer{position:static;inset:auto;pointer-events:auto}
+            .page-buttons{position:static;display:flex;flex-direction:column;align-items:center;gap:0.9rem;width:100%;max-width:420px;margin:0 auto;padding-top:1rem}
+            .opt{position:static;transform:none;min-width:auto;width:100%;max-width:100%;border-radius:14px}
+            .hero-overlay{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.9));}
+        }
     </style>
 </head>
 <body>
@@ -79,15 +93,17 @@
             <div style="position:absolute;left:{{ $logoX }}%;top:{{ $logoY }}%;transform:translate(-50%,-50%);z-index:3;">
                 <a href="{{ route('home') }}"><img class="logo" src="/images/probien-logo.png" alt="PROBIEN" style="height:{{ $logoHeight }}px"></a>
             </div>
-            <div style="position:absolute;inset:0;pointer-events:none;">
+            <div class="button-layer">
+            <div class="page-buttons">
                 @foreach($buttons as $button)
                     @php
                         $x = isset($buttonPositions[$button['key']]['x']) ? $buttonPositions[$button['key']]['x'] : 50;
                         $y = isset($buttonPositions[$button['key']]['y']) ? $buttonPositions[$button['key']]['y'] : 60;
                     @endphp
-                    <a class="opt" href="{{ $button['url'] }}" style="position:absolute;left:{{ $x }}%;top:{{ $y }}%;transform:translate(-50%,-50%);z-index:3;pointer-events:auto;">{{ $button['label'] }}</a>
+                    <a class="opt" href="{{ $button['url'] }}" style="left:{{ $x }}%;top:{{ $y }}%;z-index:3;">{{ $button['label'] }}</a>
                 @endforeach
             </div>
+        </div>
         </div>
     </div>
 </body>
