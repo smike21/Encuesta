@@ -56,10 +56,26 @@
         <input type="file" name="logo" accept="image/*" class="form-control">
         <div class="mt-2 small text-muted">Si subes un logo se reemplazará el actual.</div>
     </div>
+    @php
+        $logoPositionX = old('logo_position.x', $homepage['logo_position']['x'] ?? 50);
+        $logoPositionY = old('logo_position.y', $homepage['logo_position']['y'] ?? 15);
+    @endphp
     <div class="mb-3">
         <label class="form-label">Tamaño del logo: <span id="logo_height_value">{{ $homepage['logo_height'] ?? 120 }}</span> px</label>
         <input type="range" name="logo_height" id="logo_height" min="60" max="220" value="{{ $homepage['logo_height'] ?? 120 }}" class="form-range">
         <div class="small text-muted">Ajusta el alto del logo en la página principal.</div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Posición del logo</label>
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <label class="form-label" style="flex:1;min-width:180px;">X (%) <span id="logo_x_value">{{ $logoPositionX }}</span>
+                <input type="range" name="logo_position[x]" id="logo_x" min="0" max="100" value="{{ $logoPositionX }}" class="form-range logo-position-input" data-axis="x">
+            </label>
+            <label class="form-label" style="flex:1;min-width:180px;">Y (%) <span id="logo_y_value">{{ $logoPositionY }}</span>
+                <input type="range" name="logo_position[y]" id="logo_y" min="0" max="100" value="{{ $logoPositionY }}" class="form-range logo-position-input" data-axis="y">
+            </label>
+        </div>
+        <div class="small text-muted">Controla la posición del logo en la página de inicio.</div>
     </div>
     <div class="mb-3">
         <label class="form-label">Posición individual de botones</label>
@@ -73,7 +89,7 @@
         @endphp
         <div style="display:flex;flex-direction:column;gap:1rem;">
             <div style="position:relative;width:100%;min-height:260px;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
-                <div id="preview-logo" style="position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
+                <div id="preview-logo-container" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
                     <img id="preview-logo-img" src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:220px;object-fit:contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     <span id="preview-logo-text" class="small text-muted" style="display:none;">Logo</span>
                 </div>
@@ -160,6 +176,8 @@
     const logoHeightInput = document.getElementById('logo_height');
     const logoHeightValue = document.getElementById('logo_height_value');
     const previewLogoImg = document.getElementById('preview-logo-img');
+    const previewLogoContainer = document.getElementById('preview-logo-container');
+    const logoPositionInputs = document.querySelectorAll('.logo-position-input');
 
     if (logoHeightInput) {
         logoHeightInput.addEventListener('input', function () {
@@ -172,6 +190,23 @@
             }
         });
     }
+
+    function updateLogoPreview(input) {
+        const axis = input.dataset.axis;
+        const value = input.value;
+        const label = document.getElementById('logo_' + axis + '_value');
+        if (label) {
+            label.textContent = value;
+        }
+        if (previewLogoContainer) {
+            if (axis === 'x') previewLogoContainer.style.left = value + '%';
+            if (axis === 'y') previewLogoContainer.style.top = value + '%';
+        }
+    }
+
+    logoPositionInputs.forEach(input => {
+        input.addEventListener('input', () => updateLogoPreview(input));
+    });
 </script>
 
 @endsection

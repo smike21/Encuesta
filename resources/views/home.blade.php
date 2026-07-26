@@ -63,6 +63,10 @@
 
         @php
             $buttonPositions = is_array($hp['button_positions'] ?? null) ? $hp['button_positions'] : [];
+            $logoPosition = is_array($hp['logo_position'] ?? null) ? $hp['logo_position'] : ['x' => 50, 'y' => 15];
+            $logoX = isset($logoPosition['x']) ? $logoPosition['x'] : 50;
+            $logoY = isset($logoPosition['y']) ? $logoPosition['y'] : 15;
+            $logoHeight = $hp['logo_height'] ?? 120;
             $buttons = [
                 ['key' => 'conocenos', 'label' => 'Conócenos', 'url' => '/conocenos'],
                 ['key' => 'eventos', 'label' => 'Eventos realizados', 'url' => '/eventos'],
@@ -72,7 +76,9 @@
         @endphp
 
         <div style="position:relative;z-index:2;width:100%;min-height:320px;">
-            <a href="{{ route('home') }}"><img class="logo" src="/images/probien-logo.png" alt="PROBIEN" style="height:{{ $hp['logo_height'] ?? 120 }}px"></a>
+            <div style="position:absolute;left:{{ $logoX }}%;top:{{ $logoY }}%;transform:translate(-50%,-50%);z-index:3;">
+                <a href="{{ route('home') }}"><img class="logo" src="/images/probien-logo.png" alt="PROBIEN" style="height:{{ $logoHeight }}px"></a>
+            </div>
             <div style="position:absolute;inset:0;pointer-events:none;">
                 @foreach($buttons as $button)
                     @php

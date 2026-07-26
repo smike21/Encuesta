@@ -304,6 +304,9 @@ class AdminController extends Controller
             'existing_order' => ['nullable', 'string', 'max:200000'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
             'logo_height' => ['nullable', 'integer', 'min:60', 'max:220'],
+            'logo_position' => ['nullable', 'array'],
+            'logo_position.x' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'logo_position.y' => ['nullable', 'integer', 'min:0', 'max:100'],
             'button_positions' => ['nullable', 'array'],
             'button_positions.*.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'button_positions.*.y' => ['nullable', 'integer', 'min:0', 'max:100'],
@@ -344,6 +347,16 @@ class AdminController extends Controller
             $logoHeight = min(max($logoHeight, 60), 220);
         }
 
+        $logoPosition = ['x' => 50, 'y' => 15];
+        if (!empty($data['logo_position']) && is_array($data['logo_position'])) {
+            if (isset($data['logo_position']['x'])) {
+                $logoPosition['x'] = (int) $data['logo_position']['x'];
+            }
+            if (isset($data['logo_position']['y'])) {
+                $logoPosition['y'] = (int) $data['logo_position']['y'];
+            }
+        }
+
         $defaultButtons = [
             'conocenos' => ['x' => 40, 'y' => 35],
             'eventos' => ['x' => 70, 'y' => 35],
@@ -369,6 +382,7 @@ class AdminController extends Controller
             'speed' => (int) ($data['speed'] ?? 4),
             'images' => $images,
             'button_positions' => $buttonPositions,
+            'logo_position' => $logoPosition,
             'logo_height' => $logoHeight,
             'updated_at' => now()->toDateTimeString(),
         ];
