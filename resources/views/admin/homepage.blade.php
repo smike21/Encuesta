@@ -60,6 +60,11 @@
         $logoPositionX = old('logo_position.x', $homepage['logo_position']['x'] ?? 50);
         $logoPositionY = old('logo_position.y', $homepage['logo_position']['y'] ?? 15);
     @endphp
+    @php
+        $previewMode = old('mode', $homepage['mode'] ?? 'collage');
+        $mobileLayout = old('mobile_layout', $homepage['mobile_layout'] ?? 'stacked');
+        $images = $homepage['images'] ?? [];
+    @endphp
     <div class="mb-3">
         <label class="form-label">Tamaño del logo: <span id="logo_height_value">{{ $homepage['logo_height'] ?? 120 }}</span> px</label>
         <input type="range" name="logo_height" id="logo_height" min="60" max="220" value="{{ $homepage['logo_height'] ?? 120 }}" class="form-range">
@@ -90,7 +95,27 @@
         <div style="display:flex;flex-direction:column;gap:1rem;">
             <div style="width:100%;max-width:1200px;margin:0 auto;padding:2rem;box-sizing:border-box;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
                 <div style="position:relative;width:100%;min-height:320px;">
-                    <div id="preview-logo-container" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
+                    @if(!empty($images))
+                        @if($previewMode === 'slideshow')
+                            <div id="preview-images" style="position:absolute;inset:0;z-index:0;overflow:hidden;">
+                                <style>
+                                    #preview-images img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease;}
+                                    #preview-images img.active {opacity:1;}
+                                </style>
+                                @foreach($images as $i => $img)
+                                    <img src="{{ $img }}" class="{{ $i===0 ? 'active' : '' }}">
+                                @endforeach
+                            </div>
+                        @else
+                            <div id="preview-images" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px;padding:12px;z-index:0;">
+                                @foreach($images as $img)
+                                    <div style="overflow:hidden;border-radius:12px;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;"></div>
+                                @endforeach
+                            </div>
+                        @endif
+                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.22));pointer-events:none;z-index:1;"></div>
+                    @endif
+                    <div id="preview-logo-container" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);z-index:2;">
                         <img id="preview-logo-img" src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:220px;object-fit:contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                         <span id="preview-logo-text" class="small text-muted" style="display:none;">Logo</span>
                     </div>
@@ -113,6 +138,53 @@
                 </div>
             @endforeach
             <div class="small text-muted">Ajusta la posición de cada botón individualmente. Los valores se guardan en porcentaje para adaptarse al tamaño de pantalla.</div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Personalizar móviles</label>
+        <div class="d-flex flex-column flex-md-row gap-3 align-items-start">
+            <label class="d-flex align-items-center gap-2"><input type="radio" name="mobile_layout" value="stacked" {{ $mobileLayout === 'stacked' ? 'checked' : '' }}> Botones apilados</label>
+            <label class="d-flex align-items-center gap-2"><input type="radio" name="mobile_layout" value="absolute" {{ $mobileLayout === 'absolute' ? 'checked' : '' }}> Posición personalizada</label>
+        </div>
+        <div class="small text-muted">Elige el diseño que prefieres para los celulares.</div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Vista previa móvil</label>
+        <div id="mobile-preview" style="width:100%;max-width:420px;margin:auto;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;padding:1rem;box-sizing:border-box;min-height:520px;position:relative;">
+            @if(!empty($images))
+                <div style="position:absolute;inset:0;z-index:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:6px;padding:12px;">
+                    @foreach($images as $img)
+                        <div style="overflow:hidden;border-radius:10px;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;"></div>
+                    @endforeach
+                </div>
+                <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(255,255,255,.9));pointer-events:none;z-index:1;"></div>
+            @endif
+            @if($mobileLayout === 'absolute')
+                <div style="position:relative;z-index:2;width:100%;height:100%;">
+                    <div style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.4rem .8rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
+                        <img src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:180px;object-fit:contain;">
+                    </div>
+                    @foreach($buttons as $button)
+                        @php
+                            $x = old('button_positions.'.$button['key'].'.x', $homepage['button_positions'][$button['key']]['x'] ?? 50);
+                            $y = old('button_positions.'.$button['key'].'.y', $homepage['button_positions'][$button['key']]['y'] ?? 60);
+                        @endphp
+                        <a href="{{ $button['url'] }}" style="position:absolute;left:{{ $x }}%;top:{{ $y }}%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;min-width:160px;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;box-shadow:0 8px 20px rgba(57,24,0,.06);z-index:2;">{{ $button['label'] }}</a>
+                    @endforeach
+                </div>
+            @else
+                <div style="position:relative;z-index:2;display:flex;flex-direction:column;gap:0.9rem;align-items:center;">
+                    <div style="display:flex;justify-content:center;width:100%;">
+                        <img src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:180px;object-fit:contain;">
+                    </div>
+                    <div id="mobile-buttons-preview" style="width:100%;display:flex;flex-direction:column;gap:.9rem;">
+                        @foreach($buttons as $button)
+                            <a href="{{ $button['url'] }}" style="display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;min-width:100%;box-shadow:0 8px 20px rgba(57,24,0,.06);">{{ $button['label'] }}</a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -209,6 +281,24 @@
     logoPositionInputs.forEach(input => {
         input.addEventListener('input', () => updateLogoPreview(input));
     });
+
+    const mobileLayoutInputs = document.querySelectorAll('input[name="mobile_layout"]');
+    const stackedPreview = document.getElementById('mobile-preview-stacked');
+    const absolutePreview = document.getElementById('mobile-preview-absolute');
+
+    function updateMobilePreview() {
+        const selected = document.querySelector('input[name="mobile_layout"]:checked')?.value || 'stacked';
+        if (stackedPreview && absolutePreview) {
+            stackedPreview.style.display = selected === 'stacked' ? 'flex' : 'none';
+            absolutePreview.style.display = selected === 'absolute' ? 'block' : 'none';
+        }
+    }
+
+    mobileLayoutInputs.forEach(input => {
+        input.addEventListener('change', updateMobilePreview);
+    });
+
+    updateMobilePreview();
 </script>
 
 @endsection

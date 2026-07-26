@@ -16,6 +16,7 @@
         .button-layer{position:absolute;inset:0;pointer-events:none}
         .page-buttons{position:relative;width:100%;height:100%}
         .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.22));pointer-events:none}
+        @if(($hp['mobile_layout'] ?? 'stacked') === 'stacked')
         @media (max-width: 767px) {
             body{align-items:flex-start}
             .box{padding:1rem;min-height:auto}
@@ -26,6 +27,18 @@
             .opt{position:static;transform:none;min-width:auto;width:100%;max-width:100%;border-radius:14px}
             .hero-overlay{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.9));}
         }
+        @else
+        @media (max-width: 767px) {
+            body{align-items:flex-start}
+            .box{padding:1rem;min-height:auto}
+            .hero-content{min-height:auto}
+            .logo-wrapper{position:absolute;left:50%;top:5%;transform:translate(-50%, -50%)}
+            .button-layer{position:absolute;inset:0;pointer-events:none}
+            .page-buttons{position:relative;width:100%;height:100%}
+            .opt{position:absolute;transform:translate(-50%,-50%);min-width:180px;max-width:240px}
+            .hero-overlay{background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.22));}
+        }
+        @endif
     </style>
 </head>
 <body>

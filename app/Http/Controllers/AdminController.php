@@ -307,6 +307,7 @@ class AdminController extends Controller
             'logo_position' => ['nullable', 'array'],
             'logo_position.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'logo_position.y' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'mobile_layout' => ['nullable', 'in:stacked,absolute'],
             'button_positions' => ['nullable', 'array'],
             'button_positions.*.x' => ['nullable', 'integer', 'min:0', 'max:100'],
             'button_positions.*.y' => ['nullable', 'integer', 'min:0', 'max:100'],
@@ -384,6 +385,7 @@ class AdminController extends Controller
             'button_positions' => $buttonPositions,
             'logo_position' => $logoPosition,
             'logo_height' => $logoHeight,
+            'mobile_layout' => $data['mobile_layout'] ?? 'stacked',
             'updated_at' => now()->toDateTimeString(),
         ];
         file_put_contents(storage_path('app/homepage.json'), json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
