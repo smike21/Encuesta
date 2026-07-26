@@ -95,7 +95,7 @@
                         <span id="preview-logo-text" class="small text-muted" style="display:none;">Logo</span>
                     </div>
                     @foreach($buttons as $key => $button)
-                        <div id="preview-{{ $key }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);padding:.55rem 1rem;background:#b95712;color:#fff;border-radius:999px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.12);">{{ $button['label'] }}</div>
+                        <div id="preview-{{ $key }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;min-width:200px;padding:1rem 1.25rem;background:#b95712;color:#fff;border-radius:14px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 8px 20px rgba(57,24,0,.06);">{{ $button['label'] }}</div>
                     @endforeach
                 </div>
             </div>
