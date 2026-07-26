@@ -47,13 +47,13 @@
                     <input type="number" name="speed" id="speed" min="1" max="30" value="{{ $homepage['speed'] ?? 4 }}" class="form-control" style="width:80px">
                 </div>
             </div>
-            <div id="mode-options-collage" style="display:{{ (old('mode',$homepage['mode'] ?? '') == 'collage') ? 'block' : 'none' }};">
+            <div id="mode-options-collage" style="display:{{ (old('mode',$homepage['mode'] ?? '') == 'collage' && count($images) > 0) ? 'block' : 'none' }};">
                 <div class="d-flex flex-wrap gap-3 align-items-center">
                     <label class="form-label" style="flex:1;min-width:220px;">Filas × Columnas
                         <select name="collage_layout" id="collage_layout" class="form-select" data-initial="{{ $collageLayout }}"></select>
                     </label>
                 </div>
-                <div class="small text-muted">Elige el layout ideal según el número de imágenes cargadas. El collage ocupará todo el área disponible.</div>
+                <div id="collage-layout-message" class="small text-muted" style="display:none;">Elige el layout ideal según el número de imágenes cargadas. El collage ocupará todo el área disponible.</div>
             </div>
         </div>
     </div>
@@ -273,6 +273,7 @@
             });
             document.getElementById('existing_order').value = JSON.stringify(arr);
             buildCollageOptions();
+            updateModeOptions();
         }
         list.addEventListener('dragstart', (e)=>{ if(e.target.classList.contains('hp-item')) { dragEl = e.target; e.dataTransfer.effectAllowed='move'; }});
         list.addEventListener('dragover', (e)=>{ e.preventDefault(); const after = e.target.closest('.hp-item'); if(after && after !== dragEl) { list.insertBefore(dragEl, after.nextSibling); }});
@@ -331,6 +332,8 @@
     const previewLogoContainer = document.getElementById('preview-logo-container');
     const logoPositionInputs = document.querySelectorAll('.logo-position-input');
     const collageLayoutSelect = document.getElementById('collage_layout');
+    const modeOptionsCollage = document.getElementById('mode-options-collage');
+    const collageLayoutMessage = document.getElementById('collage-layout-message');
 
     if (logoHeightInput) {
         logoHeightInput.addEventListener('input', function () {
@@ -374,8 +377,11 @@
         const count = getCurrentImageCount();
         const layouts = getAvailableLayouts(count);
         if (!collageLayoutSelect) return;
-        const currentValue = collageLayoutSelect.value || collageLayoutSelect.dataset.initial || '2x4';
         collageLayoutSelect.innerHTML = '';
+        if (!layouts.length) {
+            return;
+        }
+        const currentValue = collageLayoutSelect.value || collageLayoutSelect.dataset.initial || layouts[0][0] + 'x' + layouts[0][1];
         layouts.forEach(([rows, cols]) => {
             const option = document.createElement('option');
             option.value = rows + 'x' + cols;
@@ -507,9 +513,15 @@
         const selected = document.querySelector('input[name="mode"]:checked')?.value || 'collage';
         const slideshowOpts = document.getElementById('mode-options-slideshow');
         const collageOpts = document.getElementById('mode-options-collage');
-        if (slideshowOpts && collageOpts) {
+        const hasImages = getCurrentImageCount() > 0;
+        if (slideshowOpts) {
             slideshowOpts.style.display = selected === 'slideshow' ? 'block' : 'none';
-            collageOpts.style.display = selected === 'collage' ? 'block' : 'none';
+        }
+        if (collageOpts) {
+            collageOpts.style.display = selected === 'collage' && hasImages ? 'block' : 'none';
+        }
+        if (collageLayoutMessage) {
+            collageLayoutMessage.style.display = selected === 'collage' && !hasImages ? 'block' : 'none';
         }
     }
 
