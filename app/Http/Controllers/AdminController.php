@@ -388,7 +388,15 @@ class AdminController extends Controller
             'mobile_layout' => $data['mobile_layout'] ?? 'stacked',
             'updated_at' => now()->toDateTimeString(),
         ];
+        // Save canonical copy in storage
         file_put_contents(storage_path('app/homepage.json'), json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        // Also write a public copy for easy verification on deployed hosts (temporary, safe):
+        // this allows fetching https://<app>/homepage.json to inspect current settings.
+        try {
+            file_put_contents(public_path('homepage.json'), json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        } catch (\Throwable $e) {
+            // ignore write errors to public path (some hosts may disallow write), storage copy remains authoritative
+        }
 
         return redirect()->route('admin.homepage')->with('success', 'Configuración de la página principal guardada.');
     }
