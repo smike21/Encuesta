@@ -282,4 +282,58 @@ class AdminController extends Controller
         User::create(['name' => 'Administrador', 'email' => 'admin@encuestas.test', 'password' => Hash::make('admin123'), 'is_admin' => true]);
         return redirect()->route('admin.login')->with('success', 'Admin creado: admin@encuestas.test / admin123. Cámbialo después de ingresar.');
     }
+
+    public function homepageSettings(): View
+    {
+        $this->guard();
+        $path = storage_path('app/homepage.json');
+        $data = file_exists($path) ? json_decode(file_get_contents($path), true) : ['images' => [], 'mode' => 'collage'];
+        return view('admin.homepage', ['homepage' => $data]);
+    }
+
+    public function saveHomepageSettings(Request $request): RedirectResponse
+    {
+        $this->guard();
+        $maxImages = (int) env('HOMEPAGE_MAX_IMAGES', 8);
+        $data = $request->validate([
+            'mode' => ['required', 'in:collage,slideshow'],
+            'transition' => ['nullable', 'in:fade,slide'],
+            'speed' => ['nullable', 'integer', 'min:1', 'max:30'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'existing_order' => ['nullable', 'string', 'max:200000'],
+        ]);
+
+        $existing = [];
+        if (!empty($data['existing_order'])) {
+            $decoded = json_decode($data['existing_order'], true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $item) {
+                    if (!empty($item['keep']) && !empty($item['url'])) $existing[] = $item['url'];
+                }
+            }
+        }
+
+        $uploaded = [];
+        if (!empty($data['images'])) {
+            $uploaded = $this->storeUploadedImages($data['images']);
+        }
+
+        if (count($existing) + count($uploaded) > $maxImages) {
+            return back()->withErrors(['images' => "El número máximo de imágenes es {$maxImages}. Elimina algunas o sube menos imágenes."])->withInput();
+        }
+
+        $images = array_values(array_filter(array_merge($existing, $uploaded)));
+
+        $payload = [
+            'mode' => $data['mode'],
+            'transition' => $data['transition'] ?? 'fade',
+            'speed' => (int) ($data['speed'] ?? 4),
+            'images' => $images,
+            'updated_at' => now()->toDateTimeString(),
+        ];
+        file_put_contents(storage_path('app/homepage.json'), json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        return redirect()->route('admin.homepage')->with('success', 'Configuración de la página principal guardada.');
+    }
 }
