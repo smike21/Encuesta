@@ -88,14 +88,16 @@
             ];
         @endphp
         <div style="display:flex;flex-direction:column;gap:1rem;">
-            <div style="position:relative;width:100%;min-height:260px;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
-                <div id="preview-logo-container" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
-                    <img id="preview-logo-img" src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:220px;object-fit:contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <span id="preview-logo-text" class="small text-muted" style="display:none;">Logo</span>
+            <div style="width:100%;max-width:1200px;margin:0 auto;padding:2rem;box-sizing:border-box;border:1px dashed #c6b99c;border-radius:16px;background:#fff7ef;overflow:hidden;">
+                <div style="position:relative;width:100%;min-height:320px;">
+                    <div id="preview-logo-container" style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.35rem .75rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
+                        <img id="preview-logo-img" src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:220px;object-fit:contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span id="preview-logo-text" class="small text-muted" style="display:none;">Logo</span>
+                    </div>
+                    @foreach($buttons as $key => $button)
+                        <div id="preview-{{ $key }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);padding:.55rem 1rem;background:#b95712;color:#fff;border-radius:999px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.12);">{{ $button['label'] }}</div>
+                    @endforeach
                 </div>
-                @foreach($buttons as $key => $button)
-                    <div id="preview-{{ $key }}" style="position:absolute;left:{{ $button['x'] }}%;top:{{ $button['y'] }}%;transform:translate(-50%,-50%);padding:.55rem 1rem;background:#b95712;color:#fff;border-radius:999px;font-weight:800;font-size:.9rem;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.12);">{{ $button['label'] }}</div>
-                @endforeach
             </div>
             @foreach($buttons as $key => $button)
                 <div class="mb-2" style="padding:1rem;border:1px solid #e9e0d3;border-radius:14px;background:#fff;">
