@@ -61,25 +61,25 @@
             <div class="hero-overlay"></div>
         @endif
 
-        <div style="position:relative;z-index:2;">
+        @php
+            $buttonPositions = is_array($hp['button_positions'] ?? null) ? $hp['button_positions'] : [];
+            $buttons = [
+                ['key' => 'conocenos', 'label' => 'Conócenos', 'url' => '/conocenos'],
+                ['key' => 'eventos', 'label' => 'Eventos realizados', 'url' => '/eventos'],
+                ['key' => 'servicios', 'label' => 'Servicios', 'url' => '/servicios'],
+                ['key' => 'market_research', 'label' => 'Investigación de Mercados', 'url' => route('market-research.index')],
+            ];
+        @endphp
+
+        <div style="position:relative;z-index:2;width:100%;min-height:320px;">
             <a href="{{ route('home') }}"><img class="logo" src="/images/probien-logo.png" alt="PROBIEN" style="height:{{ $hp['logo_height'] ?? 120 }}px"></a>
-            @php
-                $buttonPositions = $hp['button_positions'] ?? null;
-                $buttons = [
-                    ['key' => 'conocenos', 'label' => 'Conócenos', 'url' => '/conocenos'],
-                    ['key' => 'eventos', 'label' => 'Eventos realizados', 'url' => '/eventos'],
-                    ['key' => 'servicios', 'label' => 'Servicios', 'url' => '/servicios'],
-                    ['key' => 'market_research', 'label' => 'Investigación de Mercados', 'url' => route('market-research.index')],
-                ];
-            @endphp
-            <div style="position:relative;width:100%;min-height:320px;">
+            <div style="position:absolute;inset:0;pointer-events:none;">
                 @foreach($buttons as $button)
                     @php
-                        $position = $buttonPositions[$button['key']] ?? null;
-                        $x = $position['x'] ?? 50;
-                        $y = $position['y'] ?? 60;
+                        $x = isset($buttonPositions[$button['key']]['x']) ? $buttonPositions[$button['key']]['x'] : 50;
+                        $y = isset($buttonPositions[$button['key']]['y']) ? $buttonPositions[$button['key']]['y'] : 60;
                     @endphp
-                    <a class="opt" href="{{ $button['url'] }}" style="position:absolute;left:{{ $x }}%;top:{{ $y }}%;transform:translate(-50%,-50%);">{{ $button['label'] }}</a>
+                    <a class="opt" href="{{ $button['url'] }}" style="position:absolute;left:{{ $x }}%;top:{{ $y }}%;transform:translate(-50%,-50%);z-index:3;pointer-events:auto;">{{ $button['label'] }}</a>
                 @endforeach
             </div>
         </div>
