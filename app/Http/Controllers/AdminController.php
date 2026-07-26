@@ -302,6 +302,9 @@ class AdminController extends Controller
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'existing_order' => ['nullable', 'string', 'max:200000'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
+            'logo_size' => ['nullable', 'in:small,medium,large'],
+            'button_position' => ['nullable', 'in:center,top-left,top-right,bottom-center,bottom-left,bottom-right'],
         ]);
 
         $existing = [];
@@ -325,11 +328,27 @@ class AdminController extends Controller
 
         $images = array_values(array_filter(array_merge($existing, $uploaded)));
 
+        // Handle logo upload (store in public/images and reference path)
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            $target = public_path('images/probien-logo.png');
+            // overwrite existing logo file
+            $file->move(public_path('images'), 'probien-logo.png');
+        }
+
+        $logoHeight = 120; // default
+        if (!empty($data['logo_size'])) {
+            $map = ['small' => 80, 'medium' => 120, 'large' => 160];
+            $logoHeight = $map[$data['logo_size']] ?? 120;
+        }
+
         $payload = [
             'mode' => $data['mode'],
             'transition' => $data['transition'] ?? 'fade',
             'speed' => (int) ($data['speed'] ?? 4),
             'images' => $images,
+            'button_position' => $data['button_position'] ?? 'center',
+            'logo_height' => $logoHeight,
             'updated_at' => now()->toDateTimeString(),
         ];
         file_put_contents(storage_path('app/homepage.json'), json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));

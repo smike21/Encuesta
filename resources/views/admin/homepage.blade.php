@@ -50,6 +50,34 @@
         <div id="preview" style="margin-top:.75rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px"></div>
     </div>
 
+    <hr>
+    <div class="mb-3">
+        <label class="form-label">Logo del sitio</label>
+        <input type="file" name="logo" accept="image/*" class="form-control">
+        <div class="mt-2 small text-muted">Si subes un logo se reemplazará el actual.</div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Tamaño del logo</label>
+        @php $lh = $homepage['logo_height'] ?? 120; $logoSize = $lh <= 90 ? 'small' : ($lh >= 150 ? 'large' : 'medium'); @endphp
+        <select name="logo_size" class="form-select">
+            <option value="small" {{ $logoSize=='small' ? 'selected':'' }}>Pequeño</option>
+            <option value="medium" {{ $logoSize=='medium' ? 'selected':'' }}>Mediano</option>
+            <option value="large" {{ $logoSize=='large' ? 'selected':'' }}>Grande</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Posición de botones</label>
+        @php $bp = $homepage['button_position'] ?? 'center'; @endphp
+        <select name="button_position" class="form-select">
+            <option value="center" {{ $bp=='center' ? 'selected':'' }}>Centrado (predeterminado)</option>
+            <option value="top-left" {{ $bp=='top-left' ? 'selected':'' }}>Arriba izquierda</option>
+            <option value="top-right" {{ $bp=='top-right' ? 'selected':'' }}>Arriba derecha</option>
+            <option value="bottom-center" {{ $bp=='bottom-center' ? 'selected':'' }}>Abajo centrado</option>
+            <option value="bottom-left" {{ $bp=='bottom-left' ? 'selected':'' }}>Abajo izquierda</option>
+            <option value="bottom-right" {{ $bp=='bottom-right' ? 'selected':'' }}>Abajo derecha</option>
+        </select>
+    </div>
+
     <div class="d-flex gap-2">
         <button class="btn btn-primary">Guardar</button>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">Cancelar</a>

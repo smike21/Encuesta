@@ -27,7 +27,7 @@
 <body>
     <nav class="navbar"><div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
         <div class="d-flex align-items-center gap-4">
-            <a class="navbar-brand" href="{{ route('surveys.index') }}">
+            <a class="navbar-brand" href="{{ route('home') }}">
                 <img src="/images/probien-logo.png" alt="Asociación Civil PROBIEN" style="height:48px;object-fit:contain;">
             </a>
             <div class="d-flex gap-4 align-items-center" style="font-weight:700;">

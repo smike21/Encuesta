@@ -6,7 +6,7 @@
     <title>Página de inicio - PROBIEN</title>
     <style>
         body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#fff7ef;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#3d2516}
-        .box{width:min(920px,94%);text-align:center;padding:2rem;border-radius:16px}
+        .box{width:100%;max-width:1200px;text-align:center;padding:2rem;border-radius:16px;min-height:calc(100vh - 96px);display:flex;align-items:center;justify-content:center}
         img.logo{height:120px;object-fit:contain;margin-bottom:1.5rem;filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}
         .options{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-top:1.25rem}
         .opt{display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;min-width:200px;box-shadow:0 8px 20px rgba(57,24,0,.06)}
@@ -25,7 +25,7 @@
             @if($hp['mode'] === 'slideshow')
                 <div style="position:absolute;inset:0;z-index:0;">
                     <style>
-                        .slideshow{position:relative;height:320px;overflow:hidden}
+                        .slideshow{position:relative;height:100%;width:100%;overflow:hidden}
                         .slideshow img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s, transform 1s}
                         .slideshow img.active{opacity:1}
                         .slideshow.slide img{transform:translateX(100%)}
@@ -50,9 +50,9 @@
                     </script>
                 </div>
             @else
-                <div style="position:absolute;inset:0;z-index:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;padding:12px;">
+                <div style="position:absolute;inset:0;z-index:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px;padding:12px;">
                     @foreach($hp['images'] as $img)
-                        <div style="width:100%;height:100%;overflow:hidden;border-radius:8px;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;opacity:.95"></div>
+                        <div style="width:100%;height:100%;overflow:hidden;border-radius:0;"><img src="{{ $img }}" style="width:100%;height:100%;object-fit:cover;opacity:.95"></div>
                     @endforeach
                 </div>
             @endif
@@ -62,8 +62,12 @@
         @endif
 
         <div style="position:relative;z-index:2;">
-            <img class="logo" src="/images/probien-logo.png" alt="PROBIEN">
-            <div class="options">
+            <a href="{{ route('home') }}"><img class="logo" src="/images/probien-logo.png" alt="PROBIEN" style="height:{{ $hp['logo_height'] ?? 120 }}px"></a>
+            @php
+                $pos = $hp['button_position'] ?? 'center';
+                $posStyles = ['center' => 'justify-content:center;align-items:center;flex-direction:row','top-left' => 'justify-content:flex-start;align-items:flex-start;flex-direction:row','top-right' => 'justify-content:flex-end;align-items:flex-start;flex-direction:row','bottom-center' => 'justify-content:center;align-items:flex-end;flex-direction:row','bottom-left' => 'justify-content:flex-start;align-items:flex-end;flex-direction:row','bottom-right' => 'justify-content:flex-end;align-items:flex-end;flex-direction:row'];
+            @endphp
+            <div class="options" style="display:flex;{{ $posStyles[$pos] ?? $posStyles['center'] }}">
                 <a class="opt" href="/conocenos">Conócenos</a>
                 <a class="opt" href="/eventos">Eventos realizados</a>
                 <a class="opt" href="/servicios">Servicios</a>
