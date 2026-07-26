@@ -57,8 +57,8 @@
         <div class="mt-2 small text-muted">Si subes un logo se reemplazará el actual.</div>
     </div>
     @php
-        $logoPositionX = old('logo_position.x', $homepage['logo_position']['x'] ?? 50);
-        $logoPositionY = old('logo_position.y', $homepage['logo_position']['y'] ?? 15);
+        $logoPositionX = old('logo_position.x', data_get($homepage, 'logo_position.x', 50));
+        $logoPositionY = old('logo_position.y', data_get($homepage, 'logo_position.y', 15));
     @endphp
     @php
         $previewMode = old('mode', $homepage['mode'] ?? 'collage');
@@ -86,10 +86,10 @@
         <label class="form-label">Posición individual de botones</label>
         @php
             $buttons = [
-                'conocenos' => ['label' => 'Conócenos', 'x' => old('button_positions.conocenos.x', $homepage['button_positions']['conocenos']['x'] ?? 40), 'y' => old('button_positions.conocenos.y', $homepage['button_positions']['conocenos']['y'] ?? 35)],
-                'eventos' => ['label' => 'Eventos realizados', 'x' => old('button_positions.eventos.x', $homepage['button_positions']['eventos']['x'] ?? 70), 'y' => old('button_positions.eventos.y', $homepage['button_positions']['eventos']['y'] ?? 35)],
-                'servicios' => ['label' => 'Servicios', 'x' => old('button_positions.servicios.x', $homepage['button_positions']['servicios']['x'] ?? 40), 'y' => old('button_positions.servicios.y', $homepage['button_positions']['servicios']['y'] ?? 55)],
-                'market_research' => ['label' => 'Investigación de Mercados', 'x' => old('button_positions.market_research.x', $homepage['button_positions']['market_research']['x'] ?? 70), 'y' => old('button_positions.market_research.y', $homepage['button_positions']['market_research']['y'] ?? 55)],
+                'conocenos' => ['key' => 'conocenos', 'label' => 'Conócenos', 'url' => '/conocenos', 'x' => old('button_positions.conocenos.x', data_get($homepage, 'button_positions.conocenos.x', 40)), 'y' => old('button_positions.conocenos.y', data_get($homepage, 'button_positions.conocenos.y', 35))],
+                'eventos' => ['key' => 'eventos', 'label' => 'Eventos realizados', 'url' => '/eventos', 'x' => old('button_positions.eventos.x', data_get($homepage, 'button_positions.eventos.x', 70)), 'y' => old('button_positions.eventos.y', data_get($homepage, 'button_positions.eventos.y', 35))],
+                'servicios' => ['key' => 'servicios', 'label' => 'Servicios', 'url' => '/servicios', 'x' => old('button_positions.servicios.x', data_get($homepage, 'button_positions.servicios.x', 40)), 'y' => old('button_positions.servicios.y', data_get($homepage, 'button_positions.servicios.y', 55))],
+                'market_research' => ['key' => 'market_research', 'label' => 'Investigación de Mercados', 'url' => route('market-research.index'), 'x' => old('button_positions.market_research.x', data_get($homepage, 'button_positions.market_research.x', 70)), 'y' => old('button_positions.market_research.y', data_get($homepage, 'button_positions.market_research.y', 55))],
             ];
         @endphp
         <div style="display:flex;flex-direction:column;gap:1rem;">
@@ -165,12 +165,12 @@
                     <div style="position:absolute;left:{{ $logoPositionX }}%;top:{{ $logoPositionY }}%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;padding:.4rem .8rem;border-radius:999px;background:#fff;box-shadow:0 12px 20px rgba(0,0,0,.12);">
                         <img src="/images/probien-logo.png" alt="Logo" style="height:{{ $homepage['logo_height'] ?? 120 }}px;max-width:180px;object-fit:contain;">
                     </div>
-                    @foreach($buttons as $button)
+                    @foreach($buttons as $key => $button)
                         @php
-                            $x = old('button_positions.'.$button['key'].'.x', $homepage['button_positions'][$button['key']]['x'] ?? 50);
-                            $y = old('button_positions.'.$button['key'].'.y', $homepage['button_positions'][$button['key']]['y'] ?? 60);
+                            $x = old('button_positions.'.$key.'.x', data_get($homepage, 'button_positions.'.$key.'.x', 50));
+                            $y = old('button_positions.'.$key.'.y', data_get($homepage, 'button_positions.'.$key.'.y', 60));
                         @endphp
-                        <a href="{{ $button['url'] }}" style="position:absolute;left:{{ $x }}%;top:{{ $y }}%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;min-width:160px;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;box-shadow:0 8px 20px rgba(57,24,0,.06);z-index:2;">{{ $button['label'] }}</a>
+                        <a href="{{ $button['url'] ?? '#' }}" style="position:absolute;left:{{ $x }}%;top:{{ $y }}%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;min-width:160px;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;box-shadow:0 8px 20px rgba(57,24,0,.06);z-index:2;">{{ $button['label'] }}</a>
                     @endforeach
                 </div>
             @else
@@ -180,7 +180,7 @@
                     </div>
                     <div id="mobile-buttons-preview" style="width:100%;display:flex;flex-direction:column;gap:.9rem;">
                         @foreach($buttons as $button)
-                            <a href="{{ $button['url'] }}" style="display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;min-width:100%;box-shadow:0 8px 20px rgba(57,24,0,.06);">{{ $button['label'] }}</a>
+                            <a href="{{ $button['url'] ?? '#' }}" style="display:inline-flex;align-items:center;justify-content:center;padding:1rem 1.25rem;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(234,216,199,.9);font-weight:800;color:#b95712;text-decoration:none;min-width:100%;box-shadow:0 8px 20px rgba(57,24,0,.06);">{{ $button['label'] }}</a>
                         @endforeach
                     </div>
                 </div>
