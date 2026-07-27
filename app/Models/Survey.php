@@ -1,58 +1,47 @@
-<!-- Add this CSS to make the preview properly aligned -->
-@push('styles')
-<style>
-/* Survey preview styles for better alignment */
-#customization-preview .form-label {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    display: block;
-}
+<?php
 
-#customization-preview .form-check {
-    margin-bottom: 0.5rem;
-}
+namespace App\Models;
 
-#customization-preview .option-choice-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0.5rem 0;
-}
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#customization-preview .card.p-3 {
-    transition: all 0.3s ease;
-}
+class Survey extends Model
+{
+    protected $fillable = [
+        'user_id', 'title', 'description', 'collect_location', 'is_active',
+        'welcome_title', 'welcome_text', 'thank_you_title', 'thank_you_text',
+        'primary_color', 'background_color', 'text_color', 'button_text',
+        'show_title', 'show_description', 'show_progress', 'show_submit_button',
+    ];
 
-#customization-preview .progress-preview {
-    background: #f8f9fa;
-    border-radius: 4px;
-    margin: 1rem 0;
-}
+    protected $casts = [
+        'collect_location' => 'boolean',
+        'is_active' => 'boolean',
+        'show_title' => 'boolean',
+        'show_description' => 'boolean',
+        'show_progress' => 'boolean',
+        'show_submit_button' => 'boolean',
+    ];
 
-/* Survey question preview styling */
-.survey-preview-container .card.mb-3 {
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    transition: all 0.2s ease;
-}
+    public function questions(): HasMany
+    {
+        return $this->hasMany(Question::class)->orderBy('position');
+    }
 
-.survey-preview-container .card.mb-3:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(SurveySubmission::class);
+    }
 
-.survey-preview-container .form-label {
-    font-size: 1rem;
-    margin-bottom: 0.75rem;
-}
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
-.survey-preview-container textarea.form-control,
-.survey-preview-container input.form-control {
-    min-height: 38px;
+    public function assignedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'survey_user_accesses')->withTimestamps();
+    }
 }
-
-.survey-preview-container .form-check-input {
-    margin-top: 0.25rem;
-}
-</style>
-@endpush
