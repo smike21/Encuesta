@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<form method="post" action="{{ route('surveys.submit',$survey) }}" style="background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }}; font-family:{{ $survey->font_family ?: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" }}; font-size:{{ $survey->font_size ?: '16px' }}; border-radius:24px; padding:1rem;">
+<form method="post" action="{{ route('surveys.submit',$survey) }}" style="background-color:{{ $survey->background_color ?: '#eaf3ff' }}; color:{{ $survey->text_color ?: '#102a44' }}; font-family:{{ $survey->font_family ?: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" }}; font-size:{{ $survey->font_size ?: '16px' }}; border-radius:24px; padding:1rem;">
     @csrf
     <input type="hidden" name="timezone" id="timezone">
     <input type="hidden" name="locale" id="locale">
@@ -45,17 +45,17 @@
                 <span>Progreso</span>
                 <span id="progress-count">0 / {{ $survey->questions->count() }}</span>
             </div>
-            <div style="height:8px; background:#ead8c7; border-radius:999px; overflow:hidden;">
-                <div id="progress-bar-fill" style="height:100%; width:0%; background:{{ $survey->primary_color ?: '#b95712' }}; transition: width .4s ease;"></div>
+            <div style="height:8px; background:#dbe9ff; border-radius:999px; overflow:hidden;">
+                <div id="progress-bar-fill" style="height:100%; width:0%; background:{{ $survey->primary_color ?: '#1e5bb0' }}; transition: width .4s ease;"></div>
             </div>
-            <div id="progress-complete-msg" class="text-center mt-2" style="display:none; color:{{ $survey->primary_color ?: '#b95712' }}; font-weight:600; opacity:0; transition: opacity .4s ease;">
+            <div id="progress-complete-msg" class="text-center mt-2" style="display:none; color:{{ $survey->primary_color ?: '#1e5bb0' }}; font-weight:600; opacity:0; transition: opacity .4s ease;">
                 🎉 ¡Todo listo para enviar!
             </div>
         </div>
     @endif
 
     @foreach($survey->questions as $question)
-        <section class="card mb-3" data-question style="border-color:{{ $survey->primary_color ?: '#b95712' }}; background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }};">
+        <section class="card mb-3" data-question style="border-color:{{ $survey->primary_color ?: '#1e5bb0' }}; background-color:{{ $survey->background_color ?: '#eaf3ff' }}; color:{{ $survey->text_color ?: '#102a44' }};">
             <div class="card-body">
                 <label class="form-label fw-bold">{{ $question->text }}</label>
 
@@ -128,7 +128,7 @@
     @endforeach
 
     @if(($survey->show_submit_button ?? true))
-        <button class="btn btn-primary btn-lg" style="background:{{ $survey->primary_color ?: '#b95712' }}; border-color:{{ $survey->primary_color ?: '#b95712' }};">{{ $survey->button_text ?: 'Enviar respuestas' }}</button>
+        <button class="btn btn-primary btn-lg" style="background:{{ $survey->primary_color ?: '#1e5bb0' }}; border-color:{{ $survey->primary_color ?: '#1e5bb0' }};">{{ $survey->button_text ?: 'Enviar respuestas' }}</button>
     @endif
 </form>
 @endsection
@@ -172,13 +172,37 @@
 @endpush
 @push('scripts')
 <script>
-document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-document.getElementById('locale').value = navigator.language || '';
-document.getElementById('locate')?.addEventListener('click', () => navigator.geolocation ? navigator.geolocation.getCurrentPosition(p => {
-    latitude.value = p.coords.latitude;
-    longitude.value = p.coords.longitude;
-    document.getElementById('location-status').textContent = 'Ubicación obtenida';
-}, () => document.getElementById('location-status').textContent = 'No se pudo obtener la ubicación') : document.getElementById('location-status').textContent = 'Tu navegador no admite ubicación');
+const locationStatusEl = document.getElementById('location-status');
+const latitudeField = document.getElementById('latitude');
+const longitudeField = document.getElementById('longitude');
+
+const timezoneField = document.getElementById('timezone');
+const localeField = document.getElementById('locale');
+
+if (timezoneField) {
+    timezoneField.value = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+}
+
+if (localeField) {
+    localeField.value = navigator.language || '';
+}
+
+document.getElementById('locate')?.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        if (locationStatusEl) {
+            locationStatusEl.textContent = 'Tu navegador no admite ubicación';
+        }
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition((position) => {
+        if (latitudeField) latitudeField.value = position.coords.latitude;
+        if (longitudeField) longitudeField.value = position.coords.longitude;
+        if (locationStatusEl) locationStatusEl.textContent = 'Ubicación obtenida';
+    }, () => {
+        if (locationStatusEl) locationStatusEl.textContent = 'No se pudo obtener la ubicación';
+    });
+});
 
 const multiChoiceInputs = document.querySelectorAll('.multiple-choice-input');
 multiChoiceInputs.forEach((input) => {
@@ -228,10 +252,13 @@ function updateSurveyProgress() {
     }
 }
 
-document.querySelectorAll('section[data-question] input, section[data-question] textarea, section[data-question] select')
-    .forEach((field) => {
-        field.addEventListener('input', updateSurveyProgress);
-        field.addEventListener('change', updateSurveyProgress);
-    });
+const surveyFields = document.querySelectorAll('section[data-question] input, section[data-question] textarea, section[data-question] select');
+surveyFields.forEach((field) => {
+    field.addEventListener('input', updateSurveyProgress);
+    field.addEventListener('change', updateSurveyProgress);
+});
+
+document.addEventListener('DOMContentLoaded', updateSurveyProgress);
+updateSurveyProgress();
 </script>
 @endpush
