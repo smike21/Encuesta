@@ -12,6 +12,7 @@ use Illuminate\View\View;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -164,6 +165,12 @@ class AdminController extends Controller
         $contentLength = (int) ($request->server('CONTENT_LENGTH') ?? 0);
         if ($contentLength > 0 && $contentLength > $maxTotal) {
             return back()->withErrors(['__form' => "El formulario supera el límite de tamaño ({$maxTotal} bytes). Reduce el número/tamaño de imágenes o aumenta post_max_size en PHP."])->withInput();
+        }
+        // Debug: log incoming questions payload to help diagnose missing-new-question issue
+        try {
+            Log::debug('AdminController@update incoming questions payload', ['questions' => $request->input('questions')]);
+        } catch (\Throwable $e) {
+            // swallow logging errors in case logging is not writable in some environments
         }
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
