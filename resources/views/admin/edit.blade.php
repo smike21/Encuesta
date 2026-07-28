@@ -118,10 +118,6 @@
                         <div class="question-top mb-3">
                             <span class="title-chip">Pregunta</span>
                             <div class="d-flex align-items-center" style="gap:.6rem">
-                                <label class="form-check form-switch mb-0" style="margin-bottom:0">
-                                    <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="{{ $question->id }}">
-                                    <span class="form-check-label">¿Piensa añadir imagen?</span>
-                                </label>
                                 <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
                             </div>
                         </div>
@@ -336,10 +332,6 @@
                 <div class="question-top mb-3">
                     <span class="title-chip">Pregunta</span>
                     <div class="d-flex align-items-center" style="gap:.6rem">
-                        <label class="form-check form-switch mb-0" style="margin-bottom:0">
-                            <input class="form-check-input think-image-toggle" type="checkbox" data-question-index="new_${i}">
-                            <span class="form-check-label">¿Piensa añadir imagen?</span>
-                        </label>
                         <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
                     </div>
                 </div>
@@ -541,11 +533,6 @@
     // Show indicator when question or option images are selected
     document.addEventListener('change', (e) => {
         const t = e.target;
-        if (t.classList.contains('think-image-toggle')) {
-            const q = t.dataset.questionIndex;
-            document.querySelectorAll(`.image-controls[data-question-index="${q}"]`).forEach(n => n.hidden = !t.checked);
-            return;
-        }
         if (t.classList.contains('question-image-input')) {
             const m = t.name.match(/questions\[(.*?)\]\[question_images\]/);
             if (!m) return;
