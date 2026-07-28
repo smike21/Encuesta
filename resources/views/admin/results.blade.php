@@ -5,7 +5,18 @@
 @section('content')
     <div class="results-actions">
         <a href="{{ route('admin.dashboard') }}">← Volver al panel</a>
-        <a class="btn btn-primary" href="{{ route('admin.export', $survey) }}">Descargar resultados en Excel</a>
+        <div class="d-flex align-items-center gap-2">
+            @php $locationCount = $survey->submissions->whereNotNull('latitude')->whereNotNull('longitude')->count(); @endphp
+            @if($locationCount > 0)
+                <button type="button" class="btn btn-outline-primary" id="show-map-btn">Mostrar mapa de ubicaciones</button>
+            @endif
+            <a class="btn btn-primary" href="{{ route('admin.export', $survey) }}">Descargar resultados en Excel</a>
+        </div>
+    </div>
+
+    <div id="results-map-wrapper" class="mb-4" style="display:none;">
+        <div class="section-title"><span class="eyebrow">Mapa de ubicaciones</span><h2>Ubicaciones de respuestas</h2></div>
+        <div id="results-map" style="width:100%; min-height:420px; border:1px solid #ddd; border-radius:12px;"></div>
     </div>
 
     <div class="results-heading">
@@ -70,3 +81,74 @@
         </ul>
     </section>
 @endsection
+
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-oQmHd6PneB9g1rE0IJt0V24OWw4QqipEvkjsuBB0z2M=" crossorigin="" />
+<style>
+    #results-map { border-radius: 16px; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1jV+8BjwE2hPSzP3ozX8mQO8+4atz2BacXSf8xM0=" crossorigin=""></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const showMapBtn = document.getElementById('show-map-btn');
+        const mapWrapper = document.getElementById('results-map-wrapper');
+
+        if (!showMapBtn || !mapWrapper) return;
+
+        const locations = @json($survey->submissions->filter(fn($submission) => $submission->latitude !== null && $submission->longitude !== null)->map(fn($submission) => [
+            'lat' => $submission->latitude,
+            'lng' => $submission->longitude,
+            'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i').' · '.$submission->countryLabel(),
+            'link' => "https://www.google.com/maps/search/?api=1&query={$submission->latitude},{$submission->longitude}"
+        ])->values());
+
+        let mapInitialized = false;
+        let map;
+
+        showMapBtn.addEventListener('click', function () {
+            const isHidden = mapWrapper.style.display === 'none' || mapWrapper.style.display === '';
+            mapWrapper.style.display = isHidden ? 'block' : 'none';
+            showMapBtn.textContent = isHidden ? 'Ocultar mapa' : 'Mostrar mapa de ubicaciones';
+            if (!isHidden && mapInitialized) {
+                map.invalidateSize();
+                return;
+            }
+            if (!isHidden) {
+                map = L.map('results-map', { scrollWheelZoom: false });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                const markers = locations.map(loc => {
+                    const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+                    marker.bindPopup(`<strong>${loc.label}</strong><br><a href="${loc.link}" target="_blank">Abrir en Google Maps</a>`);
+                    return marker;
+                });
+
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.15));
+                mapInitialized = true;
+            }
+
+            map = L.map('results-map', { scrollWheelZoom: false });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            const markers = locations.map(loc => {
+                const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+                marker.bindPopup(`<strong>${loc.label}</strong><br><a href="${loc.link}" target="_blank">Abrir en Google Maps</a>`);
+                return marker;
+            });
+
+            const group = L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.15));
+            mapInitialized = true;
+            showMapBtn.textContent = 'Ocultar mapa';
+        });
+    });
+</script>
+@endpush
