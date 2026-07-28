@@ -610,6 +610,31 @@
         });
     });
 
+    // Client-side validation for dynamic questions: ensure `text` and `type` exist
+    document.getElementById('survey-form').addEventListener('submit', function (ev) {
+        const questionContainers = Array.from(document.querySelectorAll('#questions > .question-card'));
+        const missing = [];
+        let firstInvalid = null;
+        questionContainers.forEach((card, idx) => {
+            const text = card.querySelector('input[name*="[text]"]')?.value?.trim() || '';
+            const type = card.querySelector('select[name*="[type]"]')?.value || '';
+            if (!text) {
+                missing.push(`Pregunta ${idx + 1}: falta texto`);
+                if (!firstInvalid) firstInvalid = card.querySelector('input[name*="[text]"]');
+            }
+            if (!type) {
+                missing.push(`Pregunta ${idx + 1}: falta tipo`);
+                if (!firstInvalid) firstInvalid = card.querySelector('select[name*="[type]"]');
+            }
+        });
+        if (missing.length) {
+            ev.preventDefault();
+            alert('Corrige las preguntas antes de guardar:\n- ' + missing.join('\n- '));
+            if (firstInvalid) firstInvalid.focus();
+            return false;
+        }
+    });
+
     // Toggle question image controls and option image containers, and show previews
     document.addEventListener('click', (e) => {
         const questionButton = e.target.closest('.add-question-images-btn');
