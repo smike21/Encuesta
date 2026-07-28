@@ -108,4 +108,5 @@
 <script>
     window.resultsMapLocations = @json($submissionLocations);
 </script>
+<script src="{{ asset('js/results-map.js') }}"></script>
 @endpush
