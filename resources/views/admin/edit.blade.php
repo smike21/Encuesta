@@ -425,6 +425,8 @@
         select.addEventListener('change', function () {
             setOptionVisibility(`new_${i}`, this.value === 'multiple_choice');
         });
+        // initialize visibility based on default value for new questions
+        setOptionVisibility(`new_${i}`, select.value === 'multiple_choice');
 
         allowMultiple.addEventListener('change', function () {
             maxSelectionsWrap.hidden = !this.checked;
