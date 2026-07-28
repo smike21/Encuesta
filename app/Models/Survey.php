@@ -27,7 +27,25 @@ class Survey extends Model
 
     public function questions(): HasMany
     {
-        return $this->hasMany(Question::class)->orderBy('position');
+        return $this->hasMany(Question::class);
+    }
+
+    /**
+     * Return the questions relation as a sorted collection by `position`.
+     * This sorts in PHP to avoid relying on a DB filesort/index while the
+     * production DB may not have the needed index applied yet.
+     *
+     * Eloquent will use this accessor when `$survey->questions` is accessed.
+     */
+    public function getQuestionsAttribute($value)
+    {
+        $questions = $this->getRelationValue('questions') ?? $this->questions()->get();
+
+        if ($questions instanceof \Illuminate\Support\Collection) {
+            return $questions->sortBy('position')->values();
+        }
+
+        return $questions;
     }
 
     public function submissions(): HasMany
