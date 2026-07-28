@@ -83,7 +83,6 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-oQmHd6PneB9g1rE0IJt0V24OWw4QqipEvkjsuBB0z2M=" crossorigin="" />
 <style>
     #results-map { border-radius: 16px; }
 </style>
@@ -102,43 +101,70 @@
         ->values()
         ->all();
 @endphp
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1jV+8BjwE2hPSzP3ozX8mQO8+4atz2BacXSf8xM0=" crossorigin=""></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const showMapBtn = document.getElementById('show-map-btn');
         const mapWrapper = document.getElementById('results-map-wrapper');
-
-        if (!showMapBtn || !mapWrapper) return;
-
         const locations = @json($locations);
         let mapInitialized = false;
         let map;
+
+        if (!showMapBtn || !mapWrapper) return;
+
+        function loadLeafletAssets(callback) {
+            if (window.L) {
+                callback();
+                return;
+            }
+
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            css.integrity = 'sha256-oQmHd6PneB9g1rE0IJt0V24OWw4QqipEvkjsuBB0z2M=';
+            css.crossOrigin = '';
+            document.head.appendChild(css);
+
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            script.integrity = 'sha256-o9N1jV+8BjwE2hPSzP3ozX8mQO8+4atz2BacXSf8xM0=';
+            script.crossOrigin = '';
+            script.onload = callback;
+            script.onerror = function () {
+                alert('No se pudo cargar el mapa. Revisa tu conexión o intenta de nuevo.');
+            };
+            document.body.appendChild(script);
+        }
+
+        function initMap() {
+            if (mapInitialized) {
+                map.invalidateSize();
+                return;
+            }
+            map = L.map('results-map', { scrollWheelZoom: false });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            const markers = locations.map(loc => {
+                const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+                marker.bindPopup(`<strong>${loc.label}</strong><br><a href="${loc.link}" target="_blank">Abrir en Google Maps</a>`);
+                return marker;
+            });
+            const group = L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.15));
+            mapInitialized = true;
+        }
 
         showMapBtn.addEventListener('click', function () {
             const isHidden = mapWrapper.style.display === 'none' || mapWrapper.style.display === '';
             mapWrapper.style.display = isHidden ? 'block' : 'none';
             showMapBtn.textContent = isHidden ? 'Ocultar mapa' : 'Mostrar mapa de ubicaciones';
-
             if (!isHidden) {
-                if (mapInitialized) {
-                    map.invalidateSize();
-                    return;
+                if (window.L) {
+                    initMap();
+                } else {
+                    loadLeafletAssets(initMap);
                 }
-
-                map = L.map('results-map', { scrollWheelZoom: false });
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                }).addTo(map);
-
-                const markers = locations.map(loc => {
-                    const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-                    marker.bindPopup(`<strong>${loc.label}</strong><br><a href="${loc.link}" target="_blank">Abrir en Google Maps</a>`);
-                    return marker;
-                });
-
-                const group = L.featureGroup(markers);
-                map.fitBounds(group.getBounds().pad(0.15));
-                mapInitialized = true;
             }
         });
     });
