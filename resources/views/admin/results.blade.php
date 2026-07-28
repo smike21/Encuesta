@@ -89,6 +89,21 @@
 </style>
 @endpush
 
+@php
+    $submissionLocations = $survey->submissions
+        ->whereNotNull('latitude')
+        ->whereNotNull('longitude')
+        ->map(function ($submission) {
+            return [
+                'lat' => $submission->latitude,
+                'lng' => $submission->longitude,
+                'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i'),
+                'url' => 'https://www.google.com/maps/search/?api=1&query=' . $submission->latitude . ',' . $submission->longitude,
+            ];
+        })
+        ->values();
+@endphp
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -98,14 +113,7 @@
         let mapInitialized = false;
         let map;
 
-        const submissionLocations = @json($survey->submissions->whereNotNull('latitude')->whereNotNull('longitude')->map(function ($submission) {
-            return [
-                'lat' => $submission->latitude,
-                'lng' => $submission->longitude,
-                'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i'),
-                'url' => $submission->latitude !== null && $submission->longitude !== null ? 'https://www.google.com/maps/search/?api=1&query='.$submission->latitude.','.$submission->longitude : null,
-            ];
-        })->values()) ?? [];
+        const submissionLocations = @json($submissionLocations);
 
         if (!showMapBtn || !mapWrapper) return;
 
