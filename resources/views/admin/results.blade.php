@@ -90,6 +90,18 @@
 @endpush
 
 @push('scripts')
+@php
+    $locations = $survey->submissions
+        ->filter(fn($submission) => $submission->latitude !== null && $submission->longitude !== null)
+        ->map(fn($submission) => [
+            'lat' => $submission->latitude,
+            'lng' => $submission->longitude,
+            'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i').' · '.$submission->countryLabel(),
+            'link' => 'https://www.google.com/maps/search/?api=1&query=' . $submission->latitude . ',' . $submission->longitude,
+        ])
+        ->values()
+        ->all();
+@endphp
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1jV+8BjwE2hPSzP3ozX8mQO8+4atz2BacXSf8xM0=" crossorigin=""></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -98,13 +110,7 @@
 
         if (!showMapBtn || !mapWrapper) return;
 
-        const locations = @json($survey->submissions->filter(fn($submission) => $submission->latitude !== null && $submission->longitude !== null)->map(fn($submission) => [
-            'lat' => $submission->latitude,
-            'lng' => $submission->longitude,
-            'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i').' · '.$submission->countryLabel(),
-            'link' => "https://www.google.com/maps/search/?api=1&query={$submission->latitude},{$submission->longitude}"
-        ])->values());
-
+        const locations = @json($locations);
         let mapInitialized = false;
         let map;
 
@@ -112,11 +118,13 @@
             const isHidden = mapWrapper.style.display === 'none' || mapWrapper.style.display === '';
             mapWrapper.style.display = isHidden ? 'block' : 'none';
             showMapBtn.textContent = isHidden ? 'Ocultar mapa' : 'Mostrar mapa de ubicaciones';
-            if (!isHidden && mapInitialized) {
-                map.invalidateSize();
-                return;
-            }
+
             if (!isHidden) {
+                if (mapInitialized) {
+                    map.invalidateSize();
+                    return;
+                }
+
                 map = L.map('results-map', { scrollWheelZoom: false });
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
@@ -132,22 +140,6 @@
                 map.fitBounds(group.getBounds().pad(0.15));
                 mapInitialized = true;
             }
-
-            map = L.map('results-map', { scrollWheelZoom: false });
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            const markers = locations.map(loc => {
-                const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-                marker.bindPopup(`<strong>${loc.label}</strong><br><a href="${loc.link}" target="_blank">Abrir en Google Maps</a>`);
-                return marker;
-            });
-
-            const group = L.featureGroup(markers);
-            map.fitBounds(group.getBounds().pad(0.15));
-            mapInitialized = true;
-            showMapBtn.textContent = 'Ocultar mapa';
         });
     });
 </script>
