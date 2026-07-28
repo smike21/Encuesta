@@ -126,14 +126,10 @@
             const css = document.createElement('link');
             css.rel = 'stylesheet';
             css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            css.integrity = 'sha256-oQmHd6PneB9g1rE0IJt0V24OWw4QqipEvkjsuBB0z2M=';
-            css.crossOrigin = '';
             document.head.appendChild(css);
 
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.integrity = 'sha256-o9N1jV+8BjwE2hPSzP3ozX8mQO8+4atz2BacXSf8xM0=';
-            script.crossOrigin = '';
             script.onload = callback;
             script.onerror = function () {
                 if (statusEl) {
