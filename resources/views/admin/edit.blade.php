@@ -249,9 +249,7 @@
                                     @endif
                                 </div>
                                 <div class="mt-1"><small class="text-success question-image-status" data-question-index="{{ $question->id }}" hidden>Foto(s) subida(s)</small></div>
-                                <div class="position-absolute" style="right:12px; bottom:12px">
-                                    <button type="button" id="apply-preview-btn" class="btn btn-secondary btn-sm">Actualizar vista previa</button>
-                                </div>
+                                
                             </div>
                         </div>
                     </div>
