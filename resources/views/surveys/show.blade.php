@@ -46,7 +46,10 @@
                 <span id="progress-count">0 / {{ $survey->questions->count() }}</span>
             </div>
             <div style="height:8px; background:#ead8c7; border-radius:999px; overflow:hidden;">
-                <div id="progress-bar-fill" style="height:100%; width:0%; background:{{ $survey->primary_color ?: '#b95712' }}; transition: width .3s;"></div>
+                <div id="progress-bar-fill" style="height:100%; width:0%; background:{{ $survey->primary_color ?: '#b95712' }}; transition: width .4s ease;"></div>
+            </div>
+            <div id="progress-complete-msg" class="text-center mt-2" style="display:none; color:{{ $survey->primary_color ?: '#b95712' }}; font-weight:600; opacity:0; transition: opacity .4s ease;">
+                🎉 ¡Todo listo para enviar!
             </div>
         </div>
     @endif
@@ -207,8 +210,22 @@ function updateSurveyProgress() {
     const percent = Math.round((answered / totalQuestions) * 100);
     const fillEl = document.getElementById('progress-bar-fill');
     const countEl = document.getElementById('progress-count');
+    const completeMsg = document.getElementById('progress-complete-msg');
+
     if (fillEl) fillEl.style.width = percent + '%';
     if (countEl) countEl.textContent = `${answered} / ${totalQuestions}`;
+
+    if (completeMsg) {
+        if (percent === 100) {
+            completeMsg.style.display = 'block';
+            requestAnimationFrame(() => { completeMsg.style.opacity = '1'; });
+            if (fillEl) fillEl.style.boxShadow = '0 0 8px ' + (fillEl.style.background || '#b95712');
+        } else {
+            completeMsg.style.opacity = '0';
+            setTimeout(() => { if (percent < 100) completeMsg.style.display = 'none'; }, 400);
+            if (fillEl) fillEl.style.boxShadow = 'none';
+        }
+    }
 }
 
 document.querySelectorAll('section[data-question] input, section[data-question] textarea, section[data-question] select')
