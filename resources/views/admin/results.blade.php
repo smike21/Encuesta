@@ -15,7 +15,8 @@
     </div>
 
     <div id="results-map-wrapper" class="mb-4" style="display:none;">
-        <div class="section-title"><span class="eyebrow">Mapa de ubicaciones</span><h2>Ubicaciones de respuestas</h2></div>
+        <div class="section-title"><span class="eyebrow">Mapa de ubicaciones</span><h2>Tu ubicación</h2></div>
+        <div class="map-status text-muted small mb-2"></div>
         <div id="results-map" style="width:100%; min-height:420px; border:1px solid #ddd; border-radius:12px;"></div>
     </div>
 
@@ -89,23 +90,10 @@
 @endpush
 
 @push('scripts')
-@php
-    $locations = $survey->submissions
-        ->filter(fn($submission) => $submission->latitude !== null && $submission->longitude !== null)
-        ->map(fn($submission) => [
-            'lat' => $submission->latitude,
-            'lng' => $submission->longitude,
-            'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i').' · '.$submission->countryLabel(),
-            'link' => 'https://www.google.com/maps/search/?api=1&query=' . $submission->latitude . ',' . $submission->longitude,
-        ])
-        ->values()
-        ->all();
-@endphp
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const showMapBtn = document.getElementById('show-map-btn');
         const mapWrapper = document.getElementById('results-map-wrapper');
-        const locations = @json($locations);
         let mapInitialized = false;
         let map;
 
@@ -130,41 +118,61 @@
             script.crossOrigin = '';
             script.onload = callback;
             script.onerror = function () {
-                alert('No se pudo cargar el mapa. Revisa tu conexión o intenta de nuevo.');
+                const status = mapWrapper.querySelector('.map-status');
+                if (status) {
+                    status.textContent = 'No se pudo cargar la librería de mapas. Revisa tu conexión.';
+                }
             };
             document.body.appendChild(script);
         }
 
-        function initMap() {
+        function initMap(lat, lng) {
             if (mapInitialized) {
                 map.invalidateSize();
+                map.setView([lat, lng], 13);
                 return;
             }
-            map = L.map('results-map', { scrollWheelZoom: false });
+            map = L.map('results-map', { scrollWheelZoom: false }).setView([lat, lng], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            const markers = locations.map(loc => {
-                const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-                marker.bindPopup(`<strong>${loc.label}</strong><br><a href="${loc.link}" target="_blank">Abrir en Google Maps</a>`);
-                return marker;
-            });
-            const group = L.featureGroup(markers);
-            map.fitBounds(group.getBounds().pad(0.15));
+            const marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup('Tu ubicación actual').openPopup();
             mapInitialized = true;
         }
 
         showMapBtn.addEventListener('click', function () {
             const isHidden = mapWrapper.style.display === 'none' || mapWrapper.style.display === '';
             mapWrapper.style.display = isHidden ? 'block' : 'none';
-            showMapBtn.textContent = isHidden ? 'Ocultar mapa' : 'Mostrar mapa de ubicaciones';
+            showMapBtn.textContent = isHidden ? 'Ocultar mapa' : 'Mostrar mi ubicación';
+            const status = mapWrapper.querySelector('.map-status');
             if (!isHidden) {
-                if (window.L) {
-                    initMap();
-                } else {
-                    loadLeafletAssets(initMap);
+                if (status) {
+                    status.textContent = 'Obteniendo tu ubicación...';
                 }
+                if (!navigator.geolocation) {
+                    if (status) {
+                        status.textContent = 'Geolocalización no disponible en este navegador.';
+                    }
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    if (status) {
+                        status.textContent = '';
+                    }
+                    if (window.L) {
+                        initMap(lat, lng);
+                    } else {
+                        loadLeafletAssets(function () { initMap(lat, lng); });
+                    }
+                }, function () {
+                    if (status) {
+                        status.textContent = 'No se pudo obtener tu ubicación. Revisa permisos o intenta otra vez.';
+                    }
+                }, { timeout: 10000 });
             }
         });
     });
