@@ -287,6 +287,7 @@
 @push('scripts')
 <script>
     let n = 0;
+    let uploadsInProgress = 0;
     const box = document.getElementById('questions');
 
     function setOptionVisibility(questionIndex, isMultiple) {
@@ -587,6 +588,12 @@
             return;
         }
 
+        if (typeof uploadsInProgress !== 'undefined' && uploadsInProgress > 0) {
+            ev.preventDefault();
+            alert('Aún se están subiendo imágenes. Espera unos segundos y vuelve a intentarlo.');
+            return;
+        }
+
         document.querySelectorAll('input[type=file]').forEach((inp) => {
             if (inp.classList.contains('question-image-input')) {
                 const m = inp.name.match(/questions\[(.*?)\]\[question_images\]/);
@@ -680,17 +687,20 @@
             // remove previous hidden url inputs for this question
             document.querySelectorAll(`input[name^="questions[${q}][question_images_urls]"]`).forEach(n => n.remove());
             (async () => {
-                for (let i = 0; i < t.files.length; i++) {
-                    const fd = new FormData(); fd.append('image', t.files[i]);
-                    const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
-                    if (!res.ok) continue;
-                    const json = await res.json();
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = `questions[${q}][question_images_urls][]`;
-                    input.value = json.url;
-                    document.getElementById('survey-form').appendChild(input);
-                }
+                uploadsInProgress++;
+                try {
+                    for (let i = 0; i < t.files.length; i++) {
+                        const fd = new FormData(); fd.append('image', t.files[i]);
+                        const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
+                        if (!res.ok) continue;
+                        const json = await res.json();
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `questions[${q}][question_images_urls][]`;
+                        input.value = json.url;
+                        document.getElementById('survey-form').appendChild(input);
+                    }
+                } finally { uploadsInProgress--; }
             })();
         }
 
@@ -710,16 +720,19 @@
             }
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             (async () => {
-                const fd = new FormData(); fd.append('image', t.files[0]);
-                const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
-                if (!res.ok) return;
-                const json = await res.json();
-                document.querySelectorAll(`input[name="questions[${q}][option_images_urls][${opt}]"]`).forEach(n=>n.remove());
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `questions[${q}][option_images_urls][${opt}]`;
-                input.value = json.url;
-                document.getElementById('survey-form').appendChild(input);
+                uploadsInProgress++;
+                try {
+                    const fd = new FormData(); fd.append('image', t.files[0]);
+                    const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
+                    if (!res.ok) return;
+                    const json = await res.json();
+                    document.querySelectorAll(`input[name="questions[${q}][option_images_urls][${opt}]"]`).forEach(n=>n.remove());
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `questions[${q}][option_images_urls][${opt}]`;
+                    input.value = json.url;
+                    document.getElementById('survey-form').appendChild(input);
+                } finally { uploadsInProgress--; }
             })();
         }
     });
