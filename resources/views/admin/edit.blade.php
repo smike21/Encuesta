@@ -64,7 +64,7 @@
 
                     <div class="mt-3">
                         <div class="small text-uppercase fw-bold text-muted">Vista previa</div>
-                        <div id="customization-preview" class="border rounded p-3 mt-2" style="background:{{ old('background_color', $survey->background_color ?: '#fff7ef') }}; color:{{ old('text_color', $survey->text_color ?: '#3d2516') }};">
+                        <div id="customization-preview" class="border rounded p-3 mt-2 position-relative" style="background:{{ old('background_color', $survey->background_color ?: '#fff7ef') }}; color:{{ old('text_color', $survey->text_color ?: '#3d2516') }};">
                             <div class="card mb-3" style="border-color:{{ old('primary_color', $survey->primary_color ?: '#b95712') }}; background:{{ old('background_color', $survey->background_color ?: '#fff7ef') }}; color:{{ old('text_color', $survey->text_color ?: '#3d2516') }};">
                                 <div class="card-body">
                                     <h5 style="color:{{ old('primary_color', $survey->primary_color ?: '#b95712') }};">{{ old('welcome_title', $survey->welcome_title) ?: 'Bienvenido' }}</h5>
@@ -249,9 +249,9 @@
                                     @endif
                                 </div>
                                 <div class="mt-1"><small class="text-success question-image-status" data-question-index="{{ $question->id }}" hidden>Foto(s) subida(s)</small></div>
-                            </div>
-                            <div class="mt-2">
-                                <button type="button" id="apply-preview-btn" class="btn btn-secondary">Actualizar vista previa</button>
+                                <div class="position-absolute" style="right:12px; bottom:12px">
+                                    <button type="button" id="apply-preview-btn" class="btn btn-secondary btn-sm">Actualizar vista previa</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -451,18 +451,18 @@
 
         const title = form.querySelector('[name="title"]')?.value || 'Encuesta';
         const description = form.querySelector('[name="description"]')?.value || '';
-        const buttonText = form.querySelector('[name="button_text"]').value || 'Enviar respuestas';
-        const primaryColor = form.querySelector('[name="primary_color"]').value || '#b95712';
-        const backgroundColor = form.querySelector('[name="background_color"]').value || '#fff7ef';
+        const buttonText = form.querySelector('[name="button_text"]')?.value || 'Enviar respuestas';
+        const primaryColor = form.querySelector('[name="primary_color"]')?.value || '#b95712';
+        const backgroundColor = form.querySelector('[name="background_color"]')?.value || '#fff7ef';
         const containerBg = form.querySelector('[name="container_background_color"]')?.value || backgroundColor;
         const containerBorder = form.querySelector('[name="container_border_color"]')?.value || primaryColor;
-        const textColor = form.querySelector('[name="text_color"]').value || '#3d2516';
+        const textColor = form.querySelector('[name="text_color"]')?.value || '#3d2516';
         const fontFamily = form.querySelector('[name="font_family"]')?.value || '';
         const fontSize = form.querySelector('[name="font_size"]')?.value || '';
-        const showTitle = form.querySelector('[name="show_title"]').checked;
-        const showDescription = form.querySelector('[name="show_description"]').checked;
-        const showProgress = form.querySelector('[name="show_progress"]').checked;
-        const showSubmit = form.querySelector('[name="show_submit_button"]').checked;
+        const showTitle = !!form.querySelector('[name="show_title"]')?.checked;
+        const showDescription = !!form.querySelector('[name="show_description"]')?.checked;
+        const showProgress = !!form.querySelector('[name="show_progress"]')?.checked;
+        const showSubmit = !!form.querySelector('[name="show_submit_button"]')?.checked;
 
         preview.style.backgroundColor = backgroundColor;
         preview.style.color = textColor;
@@ -505,8 +505,18 @@
         panel.hidden = !hidden;
         this.textContent = hidden ? 'Ocultar personalización' : 'Mostrar personalización';
     });
-    // Update preview only when user clicks the button
-    document.getElementById('apply-preview-btn')?.addEventListener('click', updateCustomizationPreview);
+    // Update preview only when user clicks the button. Use delegated handler with feedback.
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.id === 'apply-preview-btn') {
+            const btn = e.target;
+            const orig = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Actualizando…';
+            try { updateCustomizationPreview(); } finally {
+                setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 600);
+            }
+        }
+    });
 
     document.getElementById('add').addEventListener('click', addQuestion);
 
