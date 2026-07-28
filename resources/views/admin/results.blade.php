@@ -15,8 +15,8 @@
     </div>
 
     <div id="results-map-wrapper" class="mb-4" style="display:none;">
-        <div class="section-title"><span class="eyebrow">Mapa de ubicaciones</span><h2>Tu ubicación</h2></div>
-        <div class="map-status text-muted small mb-2"></div>
+        <div class="section-title"><span class="eyebrow">Mapa de ubicaciones</span><h2>Ubicaciones marcadas por los participantes</h2></div>
+        <div class="map-status text-muted small mb-2">Haz clic en el botón para cargar el mapa.</div>
         <div id="results-map" style="width:100%; min-height:420px; border:1px solid #ddd; border-radius:12px;"></div>
     </div>
 
@@ -94,8 +94,18 @@
     document.addEventListener('DOMContentLoaded', function () {
         const showMapBtn = document.getElementById('show-map-btn');
         const mapWrapper = document.getElementById('results-map-wrapper');
+        const statusEl = mapWrapper ? mapWrapper.querySelector('.map-status') : null;
         let mapInitialized = false;
         let map;
+
+        const submissionLocations = @json($survey->submissions->whereNotNull('latitude')->whereNotNull('longitude')->map(function ($submission) {
+            return [
+                'lat' => $submission->latitude,
+                'lng' => $submission->longitude,
+                'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i'),
+                'url' => $submission->latitude !== null && $submission->longitude !== null ? 'https://www.google.com/maps/search/?api=1&query='.$submission->latitude.','.$submission->longitude : null,
+            ];
+        })->values()) ?? [];
 
         if (!showMapBtn || !mapWrapper) return;
 
@@ -118,61 +128,66 @@
             script.crossOrigin = '';
             script.onload = callback;
             script.onerror = function () {
-                const status = mapWrapper.querySelector('.map-status');
-                if (status) {
-                    status.textContent = 'No se pudo cargar la librería de mapas. Revisa tu conexión.';
+                if (statusEl) {
+                    statusEl.textContent = 'No se pudo cargar la librería de mapas. Revisa tu conexión.';
                 }
             };
             document.body.appendChild(script);
         }
 
-        function initMap(lat, lng) {
-            if (mapInitialized) {
-                map.invalidateSize();
-                map.setView([lat, lng], 13);
+        function initMap() {
+            if (!submissionLocations.length) {
+                if (statusEl) {
+                    statusEl.textContent = 'No hay ubicaciones válidas para mostrar en el mapa.';
+                }
                 return;
             }
-            map = L.map('results-map', { scrollWheelZoom: false }).setView([lat, lng], 13);
+
+            if (mapInitialized) {
+                map.invalidateSize();
+                return;
+            }
+
+            map = L.map('results-map', { scrollWheelZoom: false });
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            const marker = L.marker([lat, lng]).addTo(map);
-            marker.bindPopup('Tu ubicación actual').openPopup();
+            const markers = submissionLocations.map(function (item) {
+                const marker = L.marker([item.lat, item.lng]).addTo(map);
+                let popupHtml = '<strong>Envío:</strong> ' + item.label;
+                if (item.url) {
+                    popupHtml += '<br><a href="' + item.url + '" target="_blank" rel="noreferrer">Ver en Google Maps</a>';
+                }
+                marker.bindPopup(popupHtml);
+                return marker;
+            });
+
+            const group = L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.25));
+            if (statusEl) {
+                statusEl.textContent = 'Mapa cargado con ' + markers.length + ' ubicaciones.';
+            }
             mapInitialized = true;
         }
 
         showMapBtn.addEventListener('click', function () {
-            const isHidden = mapWrapper.style.display === 'none' || mapWrapper.style.display === '';
-            mapWrapper.style.display = isHidden ? 'block' : 'none';
-            showMapBtn.textContent = isHidden ? 'Ocultar mapa' : 'Mostrar mi ubicación';
-            const status = mapWrapper.querySelector('.map-status');
-            if (!isHidden) {
-                if (status) {
-                    status.textContent = 'Obteniendo tu ubicación...';
-                }
-                if (!navigator.geolocation) {
-                    if (status) {
-                        status.textContent = 'Geolocalización no disponible en este navegador.';
-                    }
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    if (status) {
-                        status.textContent = '';
-                    }
-                    if (window.L) {
-                        initMap(lat, lng);
-                    } else {
-                        loadLeafletAssets(function () { initMap(lat, lng); });
-                    }
-                }, function () {
-                    if (status) {
-                        status.textContent = 'No se pudo obtener tu ubicación. Revisa permisos o intenta otra vez.';
-                    }
-                }, { timeout: 10000 });
+            const isCurrentlyHidden = mapWrapper.style.display === 'none' || mapWrapper.style.display === '';
+            mapWrapper.style.display = isCurrentlyHidden ? 'block' : 'none';
+            showMapBtn.textContent = isCurrentlyHidden ? 'Ocultar mapa' : 'Mostrar mapa de ubicaciones';
+
+            if (!isCurrentlyHidden) {
+                return;
+            }
+
+            if (statusEl) {
+                statusEl.textContent = 'Cargando mapa...';
+            }
+
+            if (window.L) {
+                initMap();
+            } else {
+                loadLeafletAssets(initMap);
             }
         });
     });
