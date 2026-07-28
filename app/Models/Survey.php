@@ -12,7 +12,8 @@ class Survey extends Model
     protected $fillable = [
         'user_id', 'title', 'description', 'collect_location', 'is_active',
         'welcome_title', 'welcome_text', 'thank_you_title', 'thank_you_text',
-        'primary_color', 'background_color', 'text_color', 'button_text',
+        'primary_color', 'background_color', 'container_background_color', 'container_border_color',
+        'text_color', 'button_text', 'font_family', 'font_size',
         'show_title', 'show_description', 'show_progress', 'show_submit_button',
     ];
 

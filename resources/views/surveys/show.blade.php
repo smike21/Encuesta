@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<form method="post" action="{{ route('surveys.submit',$survey) }}" style="background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }}; border-radius:24px; padding:1rem;">
+<form method="post" action="{{ route('surveys.submit',$survey) }}" style="background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }}; font-family:{{ $survey->font_family ?: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" }}; font-size:{{ $survey->font_size ?: '16px' }}; border-radius:24px; padding:1rem;">
     @csrf
     <input type="hidden" name="timezone" id="timezone">
     <input type="hidden" name="locale" id="locale">

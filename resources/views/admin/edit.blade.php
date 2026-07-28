@@ -498,20 +498,32 @@
         const hidden = panel.hidden;
         panel.hidden = !hidden;
         this.textContent = hidden ? 'Ocultar personalización' : 'Mostrar personalización';
+        if (hidden) updateCustomizationPreview();
     });
-    // Update preview only when user clicks the button. Use delegated handler with feedback.
+    const previewFieldNames = [
+        'title', 'description', 'button_text',
+        'primary_color', 'background_color', 'container_background_color',
+        'container_border_color', 'text_color',
+        'font_family', 'font_size',
+        'show_title', 'show_description', 'show_progress', 'show_submit_button'
+    ];
+    const surveyFormEl = document.getElementById('survey-form');
+    if (surveyFormEl) {
+        previewFieldNames.forEach((fieldName) => {
+            const field = surveyFormEl.querySelector(`[name="${fieldName}"]`);
+            if (!field) return;
+            field.addEventListener('input', updateCustomizationPreview);
+            field.addEventListener('change', updateCustomizationPreview);
+        });
+    }
+
     document.addEventListener('click', (e) => {
         if (e.target && e.target.id === 'apply-preview-btn') {
-            const btn = e.target;
-            const orig = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = 'Actualizando…';
-            try { updateCustomizationPreview(); } finally {
-                setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 600);
-            }
+            updateCustomizationPreview();
         }
     });
 
+    updateCustomizationPreview();
     document.getElementById('add').addEventListener('click', addQuestion);
 
     box.querySelectorAll('.question-type').forEach((select) => {
