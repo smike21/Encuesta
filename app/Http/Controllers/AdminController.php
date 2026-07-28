@@ -37,7 +37,7 @@ class AdminController extends Controller
         return response()->json(['url' => $data]);
     }
 
-    public function loginForm(): View { return view('admin.login'); }
+    public function loginForm(): View { $hasAdmin = User::where('is_admin', true)->exists(); return view('admin.login', compact('hasAdmin')); }
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
