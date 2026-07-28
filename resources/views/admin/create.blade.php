@@ -96,10 +96,10 @@
                     <div class="form-check form-switch mt-2">
                         <input class="form-check-input" type="checkbox" value="1" name="show_submit_button" id="show_submit_button" checked>
                         <label class="form-check-label" for="show_submit_button">Mostrar botón de envío</label>
-                                <div class="position-absolute" style="right:12px; bottom:12px">
-                                    <button type="button" id="apply-preview-btn" class="btn btn-secondary btn-sm">Actualizar vista previa</button>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" id="apply-preview-btn" class="btn btn-secondary btn-sm">Actualizar vista previa</button>
+                    </div>
                 </div>
             </div>
 
