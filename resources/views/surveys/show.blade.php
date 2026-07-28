@@ -43,16 +43,16 @@
         <div class="mb-3">
             <div class="d-flex justify-content-between small mb-1">
                 <span>Progreso</span>
-                <span>1 / {{ $survey->questions->count() }}</span>
+                <span id="progress-count">0 / {{ $survey->questions->count() }}</span>
             </div>
             <div style="height:8px; background:#ead8c7; border-radius:999px; overflow:hidden;">
-                <div style="height:100%; width:{{ min(100, round(100 / max(1, $survey->questions->count()))) }}%; background:{{ $survey->primary_color ?: '#b95712' }};"></div>
+                <div id="progress-bar-fill" style="height:100%; width:0%; background:{{ $survey->primary_color ?: '#b95712' }}; transition: width .3s;"></div>
             </div>
         </div>
     @endif
 
     @foreach($survey->questions as $question)
-        <section class="card mb-3" style="border-color:{{ $survey->primary_color ?: '#b95712' }}; background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }};">
+        <section class="card mb-3" data-question style="border-color:{{ $survey->primary_color ?: '#b95712' }}; background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }};">
             <div class="card-body">
                 <label class="form-label fw-bold">{{ $question->text }}</label>
 
@@ -188,5 +188,33 @@ multiChoiceInputs.forEach((input) => {
         }
     });
 });
+
+// Barra de progreso: cuenta preguntas respondidas en tiempo real
+function updateSurveyProgress() {
+    const sections = document.querySelectorAll('section[data-question]');
+    const totalQuestions = sections.length;
+    if (totalQuestions === 0) return;
+
+    let answered = 0;
+    sections.forEach((section) => {
+        const isFilled = Array.from(section.querySelectorAll('input, textarea, select')).some((field) => {
+            if (field.type === 'radio' || field.type === 'checkbox') return field.checked;
+            return String(field.value || '').trim() !== '';
+        });
+        if (isFilled) answered++;
+    });
+
+    const percent = Math.round((answered / totalQuestions) * 100);
+    const fillEl = document.getElementById('progress-bar-fill');
+    const countEl = document.getElementById('progress-count');
+    if (fillEl) fillEl.style.width = percent + '%';
+    if (countEl) countEl.textContent = `${answered} / ${totalQuestions}`;
+}
+
+document.querySelectorAll('section[data-question] input, section[data-question] textarea, section[data-question] select')
+    .forEach((field) => {
+        field.addEventListener('input', updateSurveyProgress);
+        field.addEventListener('change', updateSurveyProgress);
+    });
 </script>
 @endpush
