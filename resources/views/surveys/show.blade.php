@@ -15,10 +15,10 @@
     <input type="hidden" name="locale" id="locale">
 
     @if(($survey->show_title ?? true) && ($survey->welcome_title || $survey->welcome_text))
-        <div class="card mb-4" style="border-color:{{ $survey->primary_color ?: '#b95712' }}; background-color:{{ $survey->background_color ?: '#fff7ef' }}; color:{{ $survey->text_color ?: '#3d2516' }};">
+        <div class="card mb-4" style="border-color:{{ $survey->primary_color ?: '#1e5bb0' }}; background-color:{{ $survey->background_color ?: '#eaf3ff' }}; color:{{ $survey->text_color ?: '#102a44' }};">
             <div class="card-body">
                 @if($survey->welcome_title)
-                    <h1 style="color:{{ $survey->primary_color ?: '#b95712' }};">{{ $survey->welcome_title }}</h1>
+                    <h1 style="color:{{ $survey->primary_color ?: '#1e5bb0' }};">{{ $survey->welcome_title }}</h1>
                 @endif
                 @if(($survey->show_description ?? true) && $survey->welcome_text)
                     <p class="mb-0 mt-2">{{ $survey->welcome_text }}</p>
@@ -243,7 +243,7 @@ function updateSurveyProgress() {
         if (percent === 100) {
             completeMsg.style.display = 'block';
             requestAnimationFrame(() => { completeMsg.style.opacity = '1'; });
-            if (fillEl) fillEl.style.boxShadow = '0 0 8px ' + (fillEl.style.background || '#b95712');
+            if (fillEl) fillEl.style.boxShadow = '0 0 8px ' + (fillEl.style.background || '#1e5bb0');
         } else {
             completeMsg.style.opacity = '0';
             setTimeout(() => { if (percent < 100) completeMsg.style.display = 'none'; }, 400);

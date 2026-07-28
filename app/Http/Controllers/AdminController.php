@@ -298,6 +298,21 @@ class AdminController extends Controller
         $surveyors = User::where('is_admin', false)->with(['assignedSurveys' => fn ($query) => $query->withCount('submissions')])->withCount('assignedSurveys')->orderBy('name')->get();
         return view('admin.surveyors.index', compact('surveyors'));
     }
+    public function showPasswordForm(): View
+    {
+        $this->guard();
+        return view('admin.password');
+    }
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $this->guard();
+        $request->validate([
+            'current_password' => ['required', 'string', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+        Auth::user()->update(['password' => $request->password]);
+        return redirect()->route('admin.dashboard')->with('success', 'Contraseña actualizada correctamente.');
+    }
     public function createSurveyor(): View { $this->guard(); return view('admin.surveyors.create'); }
     public function storeSurveyor(Request $request): RedirectResponse
     {

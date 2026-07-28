@@ -11,6 +11,7 @@
 	<div class="d-flex gap-2 flex-wrap">
 		<a class="btn btn-outline-primary" href="{{ route('admin.surveyors') }}">Encuestadores</a>
 		<a class="btn btn-primary" href="{{ route('admin.create') }}">Nueva encuesta</a>
+		<a class="btn btn-outline-primary" href="{{ route('admin.password.form') }}">Cambiar contraseña</a>
 	</div>
 </div>
 

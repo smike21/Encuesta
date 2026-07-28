@@ -13,6 +13,8 @@ Route::get('/admin/login', [AdminController::class, 'loginForm'])->name('admin.l
 Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
 Route::get('/admin', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::get('/admin/password', [AdminController::class, 'showPasswordForm'])->name('admin.password.form');
+Route::post('/admin/password', [AdminController::class, 'updatePassword'])->name('admin.password.update');
 Route::get('/admin/encuestadores', [AdminController::class, 'surveyors'])->name('admin.surveyors');
 Route::get('/admin/encuestadores/crear', [AdminController::class, 'createSurveyor'])->name('admin.surveyors.create');
 Route::post('/admin/encuestadores', [AdminController::class, 'storeSurveyor'])->name('admin.surveyors.store');

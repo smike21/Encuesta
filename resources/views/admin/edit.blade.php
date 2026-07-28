@@ -53,10 +53,10 @@
                     <input class="form-control mb-3" name="button_text" value="{{ old('button_text', $survey->button_text) }}" placeholder="Enviar respuestas">
 
                     <div class="row g-2">
-                        <div class="col-md-3"><label class="form-label">Color principal</label><input class="form-control" type="color" name="primary_color" value="{{ old('primary_color', $survey->primary_color ?: '#b95712') }}"></div>
-                        <div class="col-md-3"><label class="form-label">Fondo de la página</label><input class="form-control" type="color" name="background_color" value="{{ old('background_color', $survey->background_color ?: '#fff7ef') }}"></div>
-                        <div class="col-md-3"><label class="form-label">Fondo del contenedor</label><input class="form-control" type="color" name="container_background_color" value="{{ old('container_background_color', $survey->container_background_color ?: $survey->background_color ?: '#fff7ef') }}"></div>
-                        <div class="col-md-3"><label class="form-label">Color borde contenedor</label><input class="form-control" type="color" name="container_border_color" value="{{ old('container_border_color', $survey->container_border_color ?: $survey->primary_color ?: '#b95712') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Color principal</label><input class="form-control" type="color" name="primary_color" value="{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Fondo de la página</label><input class="form-control" type="color" name="background_color" value="{{ old('background_color', $survey->background_color ?: '#eaf3ff') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Fondo del contenedor</label><input class="form-control" type="color" name="container_background_color" value="{{ old('container_background_color', $survey->container_background_color ?: $survey->background_color ?: '#eaf3ff') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Color borde contenedor</label><input class="form-control" type="color" name="container_border_color" value="{{ old('container_border_color', $survey->container_border_color ?: $survey->primary_color ?: '#1e5bb0') }}"></div>
                     </div>
                     <div class="row g-2 mt-2">
                         <div class="col-md-4"><label class="form-label">Color de texto</label><input class="form-control" type="color" name="text_color" value="{{ old('text_color', $survey->text_color ?: '#3d2516') }}"></div>
@@ -64,10 +64,10 @@
 
                     <div class="mt-3">
                         <div class="small text-uppercase fw-bold text-muted">Vista previa</div>
-                        <div id="customization-preview" class="border rounded p-3 mt-2 position-relative" style="background:{{ old('background_color', $survey->background_color ?: '#fff7ef') }}; color:{{ old('text_color', $survey->text_color ?: '#3d2516') }};">
-                            <div class="card mb-3" style="border-color:{{ old('primary_color', $survey->primary_color ?: '#b95712') }}; background:{{ old('background_color', $survey->background_color ?: '#fff7ef') }}; color:{{ old('text_color', $survey->text_color ?: '#3d2516') }};">
+                        <div id="customization-preview" class="border rounded p-3 mt-2 position-relative" style="background:{{ old('background_color', $survey->background_color ?: '#eaf3ff') }}; color:{{ old('text_color', $survey->text_color ?: '#102a44') }};">
+                            <div class="card mb-3" style="border-color:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }}; background:{{ old('background_color', $survey->background_color ?: '#eaf3ff') }}; color:{{ old('text_color', $survey->text_color ?: '#102a44') }};">
                                 <div class="card-body">
-                                    <h5 style="color:{{ old('primary_color', $survey->primary_color ?: '#b95712') }};">{{ old('welcome_title', $survey->welcome_title) ?: 'Bienvenido' }}</h5>
+                                    <h5 style="color:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }};">{{ old('welcome_title', $survey->welcome_title) ?: 'Bienvenido' }}</h5>
                                     <p class="mb-0">{{ old('welcome_text', $survey->welcome_text) ?: 'Tu opinión ayuda mucho.' }}</p>
                                 </div>
                             </div>
@@ -76,11 +76,11 @@
                                     <span>Progreso</span>
                                     <span>1 / 3</span>
                                 </div>
-                                <div class="progress-preview" style="height:8px; background:#ead8c7; border-radius:999px; overflow:hidden;">
-                                    <div style="height:100%; width:33%; background:{{ old('primary_color', $survey->primary_color ?: '#b95712') }};"></div>
+                                <div class="progress-preview" style="height:8px; background:#dbe9ff; border-radius:999px; overflow:hidden;">
+                                    <div style="height:100%; width:33%; background:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }};"></div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-primary" style="background:{{ old('primary_color', $survey->primary_color ?: '#b95712') }}; border-color:{{ old('primary_color', $survey->primary_color ?: '#b95712') }};">{{ old('button_text', $survey->button_text) ?: 'Enviar respuestas' }}</button>
+                            <button type="button" class="btn btn-primary" style="background:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }}; border-color:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }};">{{ old('button_text', $survey->button_text) ?: 'Enviar respuestas' }}</button>
                         </div>
                     </div>
 
@@ -265,17 +265,17 @@
 <style>
     .question-card { background: #fffdfb; }
     .question-card .question-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
-    .question-card .question-top .title-chip { display:inline-flex; align-items:center; gap:.45rem; padding:.35rem .7rem; border-radius:999px; background:#fff1e4; color:#8e3d08; font-size:.78rem; font-weight:800; }
-    .options-editor { border:1px solid #ead8c7; border-radius:16px; padding:1rem; background:#fff8f2; margin-bottom:1rem; }
+    .question-card .question-top .title-chip { display:inline-flex; align-items:center; gap:.45rem; padding:.35rem .7rem; border-radius:999px; background:#eaf3ff; color:#1e3f72; font-size:.78rem; font-weight:800; }
+    .options-editor { border:1px solid #c5d8f2; border-radius:16px; padding:1rem; background:#f5f8ff; margin-bottom:1rem; }
     .options-list { display:grid; gap:.65rem; }
     .option-row { display:grid; grid-template-columns:1fr auto; gap:.6rem; align-items:start; }
     .option-row input { width:100%; }
-    .option-pill { border:0; background:#fff; border:1px solid #dfc8b6; border-radius:10px; padding:.55rem .8rem; display:inline-flex; align-items:center; gap:.45rem; font:inherit; color:#8e3d08; cursor:pointer; }
+    .option-pill { border:0; background:#fff; border:1px solid #c5d8f2; border-radius:10px; padding:.55rem .8rem; display:inline-flex; align-items:center; gap:.45rem; font:inherit; color:#1e3f72; cursor:pointer; }
     .option-pill--danger { color:#9a2020; }
     .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
     .option-file-input { display:none; }
     .option-file-label { min-width:140px; cursor:pointer; }
-    .img-preview { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #e6d7c7; }
+    .img-preview { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #d6e4f0; }
     .image-previews { display:flex; align-items:center; margin-top:.5rem; }
     .image-controls { display:inline-flex; align-items:center; gap:.4rem; }
     .to-remove { opacity:.45; filter:grayscale(80%); }
