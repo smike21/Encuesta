@@ -250,6 +250,9 @@
                                 </div>
                                 <div class="mt-1"><small class="text-success question-image-status" data-question-index="{{ $question->id }}" hidden>Foto(s) subida(s)</small></div>
                             </div>
+                            <div class="mt-2">
+                                <button type="button" id="apply-preview-btn" class="btn btn-secondary">Actualizar vista previa</button>
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -501,13 +504,9 @@
         const hidden = panel.hidden;
         panel.hidden = !hidden;
         this.textContent = hidden ? 'Ocultar personalización' : 'Mostrar personalización';
-        if (!hidden) updateCustomizationPreview();
     });
-
-    document.getElementById('survey-form')?.querySelectorAll('[name="welcome_title"], [name="welcome_text"], [name="button_text"], [name="primary_color"], [name="background_color"], [name="text_color"], [name="show_title"], [name="show_description"], [name="show_progress"], [name="show_submit_button"]').forEach((field) => {
-        field.addEventListener('input', updateCustomizationPreview);
-        field.addEventListener('change', updateCustomizationPreview);
-    });
+    // Update preview only when user clicks the button
+    document.getElementById('apply-preview-btn')?.addEventListener('click', updateCustomizationPreview);
 
     document.getElementById('add').addEventListener('click', addQuestion);
 
