@@ -10,6 +10,7 @@
             @if($locationCount > 0)
                 <button type="button" class="btn btn-outline-primary" id="show-map-btn">Mostrar mapa de ubicaciones</button>
             @endif
+            <button type="button" class="btn btn-outline-secondary" id="show-surveyor-counts-btn">Ver conteo por encuestador de hoy</button>
             <a class="btn btn-primary" href="{{ route('admin.export', $survey) }}">Descargar resultados en Excel</a>
         </div>
     </div>
@@ -18,6 +19,11 @@
         <div class="section-title"><span class="eyebrow">Mapa de ubicaciones</span><h2>Ubicaciones marcadas por los participantes</h2></div>
         <div class="map-status text-muted small mb-2">Haz clic en el botón para cargar el mapa.</div>
         <div id="results-map" style="width:100%; min-height:420px; border:1px solid #ddd; border-radius:12px;"></div>
+    </div>
+
+    <div id="surveyor-counts-wrapper" class="mb-4" style="display:none;">
+        <div class="section-title"><span class="eyebrow">Encuestadores</span><h2>Conteo de respuestas por encuestador (hoy)</h2></div>
+        <div id="surveyorCountsContainer"></div>
     </div>
 
     <div class="results-heading">
@@ -109,4 +115,81 @@
     window.resultsMapLocations = @json($submissionLocations);
 </script>
 <script src="{{ asset('js/results-map.js') }}"></script>
+<script>
+    (function () {
+        var button = document.getElementById('show-surveyor-counts-btn');
+        var wrapper = document.getElementById('surveyor-counts-wrapper');
+        var container = document.getElementById('surveyorCountsContainer');
+        if (!button || !wrapper || !container) return;
+
+        var countsUrl = @json(route('admin.surveyor_counts', $survey));
+        var loaded = false;
+
+        function renderSpinner() {
+            container.innerHTML = '<div class="text-muted small py-3">Cargando conteo de encuestadores…</div>';
+        }
+
+        function renderError(message) {
+            container.innerHTML = '<div class="alert alert-danger">' + (message || 'Ocurrió un error al cargar el conteo por encuestador. Intenta nuevamente.') + '</div>';
+        }
+
+        function renderTable(rows) {
+            if (!Array.isArray(rows) || rows.length === 0) {
+                container.innerHTML = '<div class="text-muted small py-3">No hay respuestas registradas hoy para esta encuesta.</div>';
+                return;
+            }
+
+            var html = '<table class="table table-bordered table-striped">';
+            html += '<thead><tr><th>Encuestador</th><th>Email</th><th>Respuestas</th></tr></thead><tbody>';
+            rows.forEach(function (row) {
+                var name = row.surveyor_name != null ? String(row.surveyor_name) : 'Anónimo';
+                var email = row.surveyor_email != null ? String(row.surveyor_email) : '';
+                var count = row.count != null ? row.count : 0;
+                html += '<tr>'
+                    + '<td>' + escapeHtml(name) + '</td>'
+                    + '<td>' + escapeHtml(email) + '</td>'
+                    + '<td>' + escapeHtml(String(count)) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(value) {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function loadCounts() {
+            renderSpinner();
+            fetch(countsUrl, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(function (data) {
+                    renderTable(data);
+                })
+                .catch(function () {
+                    renderError();
+                });
+        }
+
+        button.addEventListener('click', function () {
+            var isHidden = wrapper.style.display === 'none' || !wrapper.style.display;
+            wrapper.style.display = isHidden ? 'block' : 'none';
+            if (isHidden && !loaded) {
+                loaded = true;
+                loadCounts();
+            }
+        });
+    })();
+</script>
 @endpush

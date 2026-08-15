@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use OpenSpout\Common\Entity\Row;
@@ -292,6 +293,42 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Encuesta actualizada exitosamente.');
     }
     public function results(Survey $survey): View { $this->guard(); $survey->load(['questions.answers', 'submissions']); return view('admin.results', compact('survey')); }
+
+    /**
+     * Devuelve un conteo (en JSON) de cuántas respuestas envió cada encuestador
+     * el día de hoy para la encuesta indicada. Se identifica al encuestador por
+     * el campo `user_id` de `survey_submissions`, ya que estos usuarios estaban
+     * autenticados al momento de responder.
+     */
+    public function surveyorCounts(Survey $survey)
+    {
+        $this->guard();
+
+        $rows = DB::table('survey_submissions')
+            ->leftJoin('users', 'users.id', '=', 'survey_submissions.user_id')
+            ->where('survey_submissions.survey_id', $survey->id)
+            ->whereRaw('DATE(survey_submissions.created_at) = CURDATE()')
+            ->select(
+                'survey_submissions.user_id',
+                'users.name as surveyor_name',
+                'users.email as surveyor_email',
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('survey_submissions.user_id', 'users.name', 'users.email')
+            ->orderByDesc('count')
+            ->get();
+
+        $result = $rows->map(function ($row) {
+            $isAnonymous = $row->user_id === null;
+            return [
+                'surveyor_name' => $isAnonymous ? 'Anónimo' : ($row->surveyor_name ?? 'Anónimo'),
+                'surveyor_email' => $isAnonymous ? '' : ($row->surveyor_email ?? ''),
+                'count' => (int) $row->count,
+            ];
+        })->sortByDesc('count')->values();
+
+        return response()->json($result);
+    }
     public function surveyors(): View
     {
         $this->guard();
