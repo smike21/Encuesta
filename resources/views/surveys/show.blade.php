@@ -31,16 +31,15 @@
                         @if($question->allow_multiple)
                             @foreach($question->options ?? [] as $option)
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="answers[{{ $question->id }}][]" value="{{ $option }}" id="q{{ $question->id }}_{{ \
-str_slug($option) }}">
-                                    <label class="form-check-label" for="q{{ $question->id }}_{{ str_slug($option) }}">{{ $option }}</label>
+                                    <input class="form-check-input" type="checkbox" name="answers[{{ $question->id }}][]" value="{{ $option }}" id="q{{ $question->id }}_{{ \Illuminate\Support\Str::slug($option) }}">
+                                    <label class="form-check-label" for="q{{ $question->id }}_{{ \Illuminate\Support\Str::slug($option) }}">{{ $option }}</label>
                                 </div>
                             @endforeach
                         @else
                             @foreach($question->options ?? [] as $option)
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}_{{ str_slug($option) }}">
-                                    <label class="form-check-label" for="q{{ $question->id }}_{{ str_slug($option) }}">{{ $option }}</label>
+                                    <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}_{{ \Illuminate\Support\Str::slug($option) }}">
+                                    <label class="form-check-label" for="q{{ $question->id }}_{{ \Illuminate\Support\Str::slug($option) }}">{{ $option }}</label>
                                 </div>
                             @endforeach
                         @endif
