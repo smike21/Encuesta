@@ -1,0 +1,742 @@
+@extends('layouts.app')
+@section('title','Editar encuesta')
+@section('content')
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1>Editar encuesta</h1>
+        <form id="survey-form" class="card p-4" method="post" action="{{ route('admin.update', $survey) }}" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <label class="form-label">Título</label>
+            <input class="form-control mb-3" name="title" value="{{ old('title', $survey->title) }}" required>
+
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control mb-3" name="description">{{ old('description', $survey->description) }}</textarea>
+
+            <div class="border rounded p-3 mb-4">
+                <button type="button" class="btn btn-outline-primary w-100" id="toggle-customization">Mostrar personalización</button>
+                <div id="customization-panel" hidden>
+                    <h2 class="h4 mt-3">Personalización global</h2>
+
+                    <label class="form-label">Tipo de letra</label>
+                    <select class="form-select mb-3" name="font_family">
+                        <option value="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" {{ old('font_family', $survey->font_family ?? '') === "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" ? 'selected' : '' }}>Inter / System</option>
+                        <option value="Arial, Helvetica, sans-serif" {{ old('font_family', $survey->font_family ?? '') === 'Arial, Helvetica, sans-serif' ? 'selected' : '' }}>Arial</option>
+                        <option value="Helvetica, Arial, sans-serif" {{ old('font_family', $survey->font_family ?? '') === 'Helvetica, Arial, sans-serif' ? 'selected' : '' }}>Helvetica</option>
+                        <option value="Verdana, Geneva, sans-serif" {{ old('font_family', $survey->font_family ?? '') === 'Verdana, Geneva, sans-serif' ? 'selected' : '' }}>Verdana</option>
+                        <option value="'Times New Roman', Times, serif" {{ old('font_family', $survey->font_family ?? '') === "'Times New Roman', Times, serif" ? 'selected' : '' }}>Times New Roman</option>
+                        <option value="Georgia, 'Times New Roman', Times, serif" {{ old('font_family', $survey->font_family ?? '') === "Georgia, 'Times New Roman', Times, serif" ? 'selected' : '' }}>Georgia</option>
+                        <option value="'Roboto', sans-serif" {{ old('font_family', $survey->font_family ?? '') === "'Roboto', sans-serif" ? 'selected' : '' }}>Roboto</option>
+                        <option value="'Montserrat', sans-serif" {{ old('font_family', $survey->font_family ?? '') === "'Montserrat', sans-serif" ? 'selected' : '' }}>Montserrat</option>
+                    </select>
+
+                    <label class="form-label">Tamaño base del texto</label>
+                    <select class="form-select mb-3" name="font_size">
+                        <option value="14px" {{ old('font_size', $survey->font_size ?? '') === '14px' ? 'selected' : '' }}>Pequeño</option>
+                        <option value="16px" {{ old('font_size', $survey->font_size ?? '16px') === '16px' ? 'selected' : '' }}>Normal</option>
+                        <option value="18px" {{ old('font_size', $survey->font_size ?? '') === '18px' ? 'selected' : '' }}>Grande</option>
+                        <option value="20px" {{ old('font_size', $survey->font_size ?? '') === '20px' ? 'selected' : '' }}>Muy grande</option>
+                    </select>
+
+                    <label class="form-label">Texto del botón</label>
+                    <input class="form-control mb-3" name="button_text" value="{{ old('button_text', $survey->button_text) }}" placeholder="Enviar respuestas">
+
+                    <div class="row g-2">
+                        <div class="col-md-3"><label class="form-label">Color principal</label><input class="form-control" type="color" name="primary_color" value="{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Fondo de la página</label><input class="form-control" type="color" name="background_color" value="{{ old('background_color', $survey->background_color ?: '#eaf3ff') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Fondo del contenedor</label><input class="form-control" type="color" name="container_background_color" value="{{ old('container_background_color', $survey->container_background_color ?: $survey->background_color ?: '#eaf3ff') }}"></div>
+                        <div class="col-md-3"><label class="form-label">Color borde contenedor</label><input class="form-control" type="color" name="container_border_color" value="{{ old('container_border_color', $survey->container_border_color ?: $survey->primary_color ?: '#1e5bb0') }}"></div>
+                    </div>
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-4"><label class="form-label">Color de texto</label><input class="form-control" type="color" name="text_color" value="{{ old('text_color', $survey->text_color ?: '#3d2516') }}"></div>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="small text-uppercase fw-bold text-muted">Vista previa</div>
+                        <div id="customization-preview" class="border rounded p-3 mt-2 position-relative" style="background:{{ old('background_color', $survey->background_color ?: '#eaf3ff') }}; color:{{ old('text_color', $survey->text_color ?: '#102a44') }};">
+                            <div class="card mb-3" style="border-color:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }}; background:{{ old('background_color', $survey->background_color ?: '#eaf3ff') }}; color:{{ old('text_color', $survey->text_color ?: '#102a44') }};">
+                                <div class="card-body">
+                                    <h5 style="color:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }};">{{ old('welcome_title', $survey->welcome_title) ?: 'Bienvenido' }}</h5>
+                                    <p class="mb-0">{{ old('welcome_text', $survey->welcome_text) ?: 'Tu opinión ayuda mucho.' }}</p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Progreso</span>
+                                    <span>1 / 3</span>
+                                </div>
+                                <div class="progress-preview" style="height:8px; background:#dbe9ff; border-radius:999px; overflow:hidden;">
+                                    <div style="height:100%; width:33%; background:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }};"></div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" style="background:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }}; border-color:{{ old('primary_color', $survey->primary_color ?: '#1e5bb0') }};">{{ old('button_text', $survey->button_text) ?: 'Enviar respuestas' }}</button>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_title" id="show_title" {{ old('show_title', $survey->show_title ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="show_title">Mostrar título</label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_description" id="show_description" {{ old('show_description', $survey->show_description ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="show_description">Mostrar descripción</label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_progress" id="show_progress" {{ old('show_progress', $survey->show_progress ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="show_progress">Mostrar progreso</label>
+                    </div>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" value="1" name="show_submit_button" id="show_submit_button" {{ old('show_submit_button', $survey->show_submit_button ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="show_submit_button">Mostrar botón de envío</label>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" id="apply-preview-btn" class="btn btn-secondary btn-sm">Actualizar vista previa</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" value="1" name="collect_location" id="location" {{ old('collect_location', $survey->collect_location) ? 'checked' : '' }}>
+                <label class="form-check-label" for="location">Solicitar ubicación al responder</label>
+            </div>
+
+            <h2 class="h4">Preguntas</h2>
+            <div id="questions">
+                @foreach($survey->questions as $question)
+                    <div class="border rounded p-3 mb-3 question-card">
+                        <div class="question-top mb-3">
+                            <span class="title-chip">Pregunta</span>
+                            <div class="d-flex align-items-center" style="gap:.6rem">
+                                <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="questions[{{ $question->id }}][id]" value="{{ $question->id }}">
+
+                        <label class="form-label">Texto de la pregunta</label>
+                        <textarea class="form-control mb-2" rows="3" name="questions[{{ $question->id }}][text]" required>{{ old("questions.{$question->id}.text", $question->text) }}</textarea>
+
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select mb-3 question-type" data-question-index="{{ $question->id }}" name="questions[{{ $question->id }}][type]">
+                            <option value="text" {{ $question->type === 'text' ? 'selected' : '' }}>Respuesta corta</option>
+                            <option value="paragraph" {{ $question->type === 'paragraph' ? 'selected' : '' }}>Párrafo</option>
+                            <option value="multiple_choice" {{ $question->type === 'multiple_choice' ? 'selected' : '' }}>Opción múltiple</option>
+                            <option value="scale" {{ $question->type === 'scale' ? 'selected' : '' }}>Escala (1-5)</option>
+                        </select>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" value="1" name="questions[{{ $question->id }}][is_required]" id="required_{{ $question->id }}" {{ old("questions.{$question->id}.is_required", $question->is_required) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="required_{{ $question->id }}">Pregunta obligatoria</label>
+                        </div>
+
+                        <div class="options-editor" data-options-editor="{{ $question->id }}" {{ old("questions.{$question->id}.type", $question->type) !== 'multiple_choice' ? 'hidden' : '' }}>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">Opciones</label>
+                                <button type="button" class="option-pill add-option">Agregar opción</button>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input allow-multiple" type="checkbox" value="1" name="questions[{{ $question->id }}][allow_multiple]" id="allow_multiple_{{ $question->id }}" {{ old("questions.{$question->id}.allow_multiple", $question->allow_multiple) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="allow_multiple_{{ $question->id }}">Permitir varias opciones</label>
+                            </div>
+
+                            <div class="mb-3" data-max-selections-wrap="{{ $question->id }}" {{ !old("questions.{$question->id}.allow_multiple", $question->allow_multiple) ? 'hidden' : '' }}>
+                                <label class="form-label">Número máximo de opciones permitidas</label>
+                                <input class="form-control" type="number" min="1" name="questions[{{ $question->id }}][max_selections]" value="{{ old("questions.{$question->id}.max_selections", $question->max_selections ?? 1) }}" placeholder="Ej. 2">
+                            </div>
+
+                            <div class="options-list" data-options-list="{{ $question->id }}">
+                                @if($question->type === 'multiple_choice' && !empty($question->options))
+                                    @foreach($question->options as $index => $option)
+                                        <div class="option-row">
+                                            <div>
+                                                <input class="form-control" type="text" name="questions[{{ $question->id }}][options][]" value="{{ old("questions.{$question->id}.options.{$index}", $option) }}" placeholder="Escribe una opción" required>
+                                                <div class="d-flex align-items-center gap-2 mt-2">
+                                                    <span class="image-controls" data-question-index="{{ $question->id }}" hidden>
+                                                        <button type="button" class="option-pill add-image-btn" data-question-index="{{ $question->id }}" data-option-index="{{ $index }}">Añadir imagen</button>
+                                                    </span>
+                                                    <div class="option-image-container" data-question-index="{{ $question->id }}" data-option-index="{{ $index }}" {{ empty($question->option_images[$index] ?? null) ? 'hidden' : '' }}>
+                                                        <div class="option-media-wrap">
+                                                            <label class="option-pill option-file-label">
+                                                                <span>🖼️ Cambiar imagen</span>
+                                                                <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][{{ $index }}]">
+                                                            </label>
+                                                            <div><small class="text-success option-image-status" data-question-index="{{ $question->id }}" data-option-index="{{ $index }}" hidden>Foto subida</small></div>
+                                                        </div>
+                                                        <div class="image-previews">
+                                                            @if(!empty($question->option_images[$index] ?? null))
+                                                                <div class="d-flex align-items-center" style="gap:.5rem">
+                                                                    <img src="{{ $question->option_images[$index] }}" class="img-preview" alt="preview">
+                                                                    <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                                                        <input type="checkbox" name="questions[{{ $question->id }}][remove_option_images][{{ $index }}]" value="1" class="remove-image-checkbox"> Eliminar
+                                                                    </label>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="option-row">
+                                        <div>
+                                            <input class="form-control" type="text" name="questions[{{ $question->id }}][options][]" placeholder="Escribe una opción" required>
+                                            <div class="d-flex align-items-center gap-2 mt-2">
+                                                <span class="image-controls" data-question-index="{{ $question->id }}" hidden>
+                                                    <button type="button" class="option-pill add-image-btn" data-question-index="{{ $question->id }}" data-option-index="0">Añadir imagen</button>
+                                                </span>
+                                                <div class="option-image-container" data-question-index="{{ $question->id }}" data-option-index="0" hidden>
+                                                    <div class="option-media-wrap">
+                                                        <label class="option-pill option-file-label">
+                                                            <span>🖼️ Añadir imagen</span>
+                                                            <input class="option-file-input" type="file" accept="image/*" name="questions[{{ $question->id }}][option_images][0]">
+                                                        </label>
+                                                        <div><small class="text-success option-image-status" data-question-index="{{ $question->id }}" data-option-index="0" hidden>Foto subida</small></div>
+                                                    </div>
+                                                    <div class="image-previews"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Tamaño de las imágenes</label>
+                            <select class="form-select" name="questions[{{ $question->id }}][image_size]">
+                                <option value="small" {{ old("questions.{$question->id}.image_size", $question->image_size ?? 'medium') === 'small' ? 'selected' : '' }}>Pequeña</option>
+                                <option value="medium" {{ old("questions.{$question->id}.image_size", $question->image_size ?? 'medium') === 'medium' ? 'selected' : '' }}>Mediana</option>
+                                <option value="large" {{ old("questions.{$question->id}.image_size", $question->image_size ?? 'medium') === 'large' ? 'selected' : '' }}>Grande</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Fotos al lado de la pregunta</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="image-controls" data-question-index="{{ $question->id }}" hidden>
+                                    <button type="button" class="option-pill add-question-images-btn" data-question-index="{{ $question->id }}">Añadir imagen</button>
+                                </span>
+                                <small class="text-muted">Límite total de subida 20MB, máximo 2MB por imagen.</small>
+                            </div>
+                            <div class="question-image-controls mt-2" data-question-index="{{ $question->id }}" {{ empty($question->question_images) ? 'hidden' : '' }}>
+                                <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[{{ $question->id }}][question_images][]">
+                                <div class="image-previews mt-2">
+                                    @if(!empty($question->question_images))
+                                        @foreach($question->question_images as $idx => $img)
+                                            <div class="d-flex align-items-center" style="gap:.5rem">
+                                                <img src="{{ $img }}" class="img-preview" alt="preview">
+                                                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                                    <input type="checkbox" name="questions[{{ $question->id }}][remove_question_images][{{ $idx }}]" value="1" class="remove-image-checkbox"> Eliminar
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
+                                <div class="mt-1"><small class="text-success question-image-status" data-question-index="{{ $question->id }}" hidden>Foto(s) subida(s)</small></div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <button type="button" class="btn btn-outline-primary my-3" id="add">Agregar pregunta</button>
+            <button class="btn btn-primary w-100">Guardar cambios</button>
+        </form>
+    </div>
+</div>
+@endsection
+@push('styles')
+<style>
+    .question-card { background: #fffdfb; }
+    .question-card .question-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .question-card .question-top .title-chip { display:inline-flex; align-items:center; gap:.45rem; padding:.35rem .7rem; border-radius:999px; background:#eaf3ff; color:#1e3f72; font-size:.78rem; font-weight:800; }
+    .options-editor { border:1px solid #c5d8f2; border-radius:16px; padding:1rem; background:#f5f8ff; margin-bottom:1rem; }
+    .options-list { display:grid; gap:.65rem; }
+    .option-row { display:grid; grid-template-columns:1fr auto; gap:.6rem; align-items:start; }
+    .option-row input { width:100%; }
+    .option-pill { border:0; background:#fff; border:1px solid #c5d8f2; border-radius:10px; padding:.55rem .8rem; display:inline-flex; align-items:center; gap:.45rem; font:inherit; color:#1e3f72; cursor:pointer; }
+    .option-pill--danger { color:#9a2020; }
+    .option-media-wrap { display:flex; align-items:center; gap:.6rem; margin-top:.45rem; }
+    .option-file-input { display:none; }
+    .option-file-label { min-width:140px; cursor:pointer; }
+    .img-preview { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:.5rem; border:1px solid #d6e4f0; }
+    .image-previews { display:flex; align-items:center; margin-top:.5rem; }
+    .image-controls { display:inline-flex; align-items:center; gap:.4rem; }
+    .to-remove { opacity:.45; filter:grayscale(80%); }
+</style>
+@endpush
+@push('scripts')
+<script>
+    let n = 0;
+    let uploadsInProgress = 0;
+    const box = document.getElementById('questions');
+
+    function setOptionVisibility(questionIndex, isMultiple) {
+        const optionsEditor = document.querySelector(`[data-options-editor="${questionIndex}"]`);
+        const maxSelectionsWrap = document.querySelector(`[data-max-selections-wrap="${questionIndex}"]`);
+        if (optionsEditor) optionsEditor.hidden = !isMultiple;
+        if (optionsEditor) optionsEditor.querySelectorAll('input, select, textarea, button').forEach((field) => field.disabled = !isMultiple);
+        if (maxSelectionsWrap) maxSelectionsWrap.hidden = !isMultiple;
+    }
+
+    function addOption(questionIndex) {
+        const list = document.querySelector(`[data-options-list="${questionIndex}"]`);
+        const optionIndex = list.querySelectorAll('.option-row').length;
+        const row = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML = `
+            <div>
+                <input class="form-control" type="text" name="questions[${questionIndex}][options][]" placeholder="Escribe una opción" required>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                    <span class="image-controls" data-question-index="${questionIndex}" hidden>
+                        <button type="button" class="option-pill add-image-btn" data-question-index="${questionIndex}" data-option-index="${optionIndex}">Añadir imagen</button>
+                    </span>
+                    <div class="option-image-container" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>
+                        <div class="option-media-wrap">
+                            <label class="option-pill option-file-label">
+                                <span>🖼️ Añadir imagen</span>
+                                <input class="option-file-input" type="file" accept="image/*" name="questions[${questionIndex}][option_images][${optionIndex}]">
+                            </label>
+                            <div><small class="text-success option-image-status" data-question-index="${questionIndex}" data-option-index="${optionIndex}" hidden>Foto subida</small></div>
+                        </div>
+                        <div class="image-previews"></div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+        `;
+        list.appendChild(row);
+        row.querySelector('.remove-option').addEventListener('click', () => row.remove());
+    }
+
+    function addQuestion() {
+        const i = n++;
+        box.insertAdjacentHTML('beforeend', `
+            <div class="border rounded p-3 mb-3 question-card">
+                <div class="question-top mb-3">
+                    <span class="title-chip">Pregunta</span>
+                    <div class="d-flex align-items-center" style="gap:.6rem">
+                        <button type="button" class="btn-close float-end" onclick="this.closest('.question-card').remove()"></button>
+                    </div>
+                </div>
+
+                <label class="form-label">Texto de la pregunta</label>
+                <input class="form-control mb-2" name="questions[new_${i}][text]" required>
+
+                <label class="form-label">Tipo</label>
+                <select class="form-select mb-3 question-type" data-question-index="new_${i}" name="questions[new_${i}][type]">
+                    <option value="text">Respuesta corta</option>
+                    <option value="paragraph">Párrafo</option>
+                    <option value="multiple_choice">Opción múltiple</option>
+                    <option value="scale">Escala (1-5)</option>
+                </select>
+
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" value="1" name="questions[new_${i}][is_required]" id="required_new_${i}" checked>
+                    <label class="form-check-label" for="required_new_${i}">Pregunta obligatoria</label>
+                </div>
+
+                <div class="options-editor" data-options-editor="new_${i}" hidden>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0">Opciones</label>
+                        <button type="button" class="option-pill add-option">Agregar opción</button>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input allow-multiple" type="checkbox" value="1" name="questions[new_${i}][allow_multiple]" id="allow_multiple_new_${i}">
+                        <label class="form-check-label" for="allow_multiple_new_${i}">Permitir varias opciones</label>
+                    </div>
+
+                    <div class="mb-3" data-max-selections-wrap="new_${i}" hidden>
+                        <label class="form-label">Número máximo de opciones permitidas</label>
+                        <input class="form-control" type="number" min="1" name="questions[new_${i}][max_selections]" value="1" placeholder="Ej. 2">
+                    </div>
+
+                    <div class="options-list" data-options-list="new_${i}">
+                        <div class="option-row">
+                            <div>
+                                <input class="form-control" type="text" name="questions[new_${i}][options][]" placeholder="Escribe una opción" required>
+                                <div class="d-flex align-items-center gap-2 mt-2">
+                                    <span class="image-controls" data-question-index="new_${i}" hidden>
+                                        <button type="button" class="option-pill add-image-btn" data-question-index="new_${i}" data-option-index="0">Añadir imagen</button>
+                                    </span>
+                                    <div class="option-image-container" data-question-index="new_${i}" data-option-index="0" hidden>
+                                        <div class="option-media-wrap">
+                                            <label class="option-pill option-file-label">
+                                                <span>🖼️ Añadir imagen</span>
+                                                <input class="option-file-input" type="file" accept="image/*" name="questions[new_${i}][option_images][0]">
+                                            </label>
+                                        </div>
+                                        <div class="image-previews"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="option-pill option-pill--danger remove-option">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Tamaño de las imágenes</label>
+                    <select class="form-select" name="questions[new_${i}][image_size]">
+                        <option value="small">Pequeña</option>
+                        <option value="medium" selected>Mediana</option>
+                        <option value="large">Grande</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Fotos al lado de la pregunta</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="image-controls" data-question-index="new_${i}" hidden>
+                            <button type="button" class="option-pill add-question-images-btn" data-question-index="new_${i}">Añadir imagen</button>
+                        </span>
+                        <small class="text-muted">Puedes subir una o varias fotos.</small>
+                    </div>
+                    <div class="question-image-controls mt-2" data-question-index="new_${i}" hidden>
+                        <input type="file" class="form-control question-image-input" accept="image/*" multiple name="questions[new_${i}][question_images][]">
+                        <div class="image-previews mt-2"></div>
+                        <div class="mt-1"><small class="text-success question-image-status" data-question-index="new_${i}" hidden>Foto(s) subida(s)</small></div>
+                    </div>
+                </div>
+            </div>
+        `);
+
+        const select = box.querySelector(`.question-type[data-question-index="new_${i}"]`);
+        const allowMultiple = box.querySelector(`#allow_multiple_new_${i}`);
+        const maxSelectionsWrap = box.querySelector(`[data-max-selections-wrap="new_${i}"]`);
+
+        select.addEventListener('change', function () {
+            setOptionVisibility(`new_${i}`, this.value === 'multiple_choice');
+        });
+        // initialize visibility based on default value for new questions
+        setOptionVisibility(`new_${i}`, select.value === 'multiple_choice');
+
+        allowMultiple.addEventListener('change', function () {
+            maxSelectionsWrap.hidden = !this.checked;
+        });
+
+        const addOptionBtn = box.querySelector(`[data-options-editor="new_${i}"] .add-option`);
+        addOptionBtn.addEventListener('click', () => addOption(`new_${i}`));
+
+        box.querySelectorAll(`[data-options-editor="new_${i}"] .remove-option`).forEach((button) => {
+            button.addEventListener('click', () => button.closest('.option-row').remove());
+        });
+    }
+
+    function updateCustomizationPreview() {
+        const form = document.getElementById('survey-form');
+        const preview = document.getElementById('customization-preview');
+        if (!form || !preview) return;
+
+        const title = form.querySelector('[name="title"]')?.value || 'Encuesta';
+        const description = form.querySelector('[name="description"]')?.value || '';
+        const buttonText = form.querySelector('[name="button_text"]')?.value || 'Enviar respuestas';
+        const primaryColor = form.querySelector('[name="primary_color"]')?.value || '#b95712';
+        const backgroundColor = form.querySelector('[name="background_color"]')?.value || '#fff7ef';
+        const containerBg = form.querySelector('[name="container_background_color"]')?.value || backgroundColor;
+        const containerBorder = form.querySelector('[name="container_border_color"]')?.value || primaryColor;
+        const textColor = form.querySelector('[name="text_color"]')?.value || '#3d2516';
+        const fontFamily = form.querySelector('[name="font_family"]')?.value || '';
+        const fontSize = form.querySelector('[name="font_size"]')?.value || '';
+        const showTitle = !!form.querySelector('[name="show_title"]')?.checked;
+        const showDescription = !!form.querySelector('[name="show_description"]')?.checked;
+        const showProgress = !!form.querySelector('[name="show_progress"]')?.checked;
+        const showSubmit = !!form.querySelector('[name="show_submit_button"]')?.checked;
+
+        preview.style.backgroundColor = backgroundColor;
+        preview.style.color = textColor;
+        if (fontFamily) preview.style.fontFamily = fontFamily;
+        if (fontSize) preview.style.fontSize = fontSize;
+        const card = preview.querySelector('.card');
+        if (card) {
+            card.style.backgroundColor = containerBg;
+            card.style.color = textColor;
+            card.style.borderColor = containerBorder;
+            const h5 = card.querySelector('h5');
+            if (h5) {
+                h5.style.color = primaryColor;
+                h5.textContent = showTitle ? (title || 'Bienvenido') : '';
+            }
+            const p = card.querySelector('p');
+            if (p) {
+                p.textContent = description;
+                p.style.display = showDescription ? '' : 'none';
+            }
+        }
+
+        const smallProgress = preview.querySelector('.mb-3 .small.mb-1');
+        if (smallProgress) smallProgress.style.display = showProgress ? '' : 'none';
+        const progressBarWrap = preview.querySelector('.mb-3 .progress-preview');
+        if (progressBarWrap) progressBarWrap.style.display = showProgress ? '' : 'none';
+
+        const btn = preview.querySelector('button');
+        if (btn) {
+            btn.style.display = showSubmit ? '' : 'none';
+            btn.textContent = buttonText;
+            btn.style.backgroundColor = primaryColor;
+            btn.style.borderColor = primaryColor;
+        }
+    }
+
+    document.getElementById('toggle-customization')?.addEventListener('click', function () {
+        const panel = document.getElementById('customization-panel');
+        const hidden = panel.hidden;
+        panel.hidden = !hidden;
+        this.textContent = hidden ? 'Ocultar personalización' : 'Mostrar personalización';
+        if (hidden) updateCustomizationPreview();
+    });
+    const previewFieldNames = [
+        'title', 'description', 'button_text',
+        'primary_color', 'background_color', 'container_background_color',
+        'container_border_color', 'text_color',
+        'font_family', 'font_size',
+        'show_title', 'show_description', 'show_progress', 'show_submit_button'
+    ];
+    const surveyFormEl = document.getElementById('survey-form');
+    if (surveyFormEl) {
+        previewFieldNames.forEach((fieldName) => {
+            const field = surveyFormEl.querySelector(`[name="${fieldName}"]`);
+            if (!field) return;
+            field.addEventListener('input', updateCustomizationPreview);
+            field.addEventListener('change', updateCustomizationPreview);
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.id === 'apply-preview-btn') {
+            updateCustomizationPreview();
+        }
+    });
+
+    updateCustomizationPreview();
+    document.getElementById('add').addEventListener('click', addQuestion);
+
+    box.querySelectorAll('.question-type').forEach((select) => {
+        select.addEventListener('change', function () {
+            setOptionVisibility(this.dataset.questionIndex, this.value === 'multiple_choice');
+        });
+        setOptionVisibility(select.dataset.questionIndex, select.value === 'multiple_choice');
+    });
+
+    box.querySelectorAll('.remove-option').forEach((button) => {
+        button.addEventListener('click', () => button.closest('.option-row').remove());
+    });
+
+    box.querySelectorAll('.add-option').forEach((button) => {
+        const questionIndex = button.closest('.options-editor').dataset.optionsEditor;
+        button.addEventListener('click', () => addOption(questionIndex));
+    });
+
+    // Show indicator when question or option images are selected
+    document.addEventListener('change', (e) => {
+        const t = e.target;
+        if (t.classList.contains('question-image-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[question_images\]/);
+            if (!m) return;
+            const q = m[1];
+            const status = document.querySelector(`.question-image-status[data-question-index="${q}"]`);
+            if (status) {
+                status.hidden = t.files.length === 0;
+                status.textContent = t.files.length ? `Foto(s) subida(s): ${t.files.length}` : 'Foto(s) subida(s)';
+            }
+        }
+
+        if (t.classList.contains('option-file-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[option_images\]\[(\d+)\]/);
+            if (!m) return;
+            const q = m[1];
+            const opt = m[2];
+            const status = document.querySelector(`.option-image-status[data-question-index="${q}"][data-option-index="${opt}"]`);
+            if (status) {
+                status.hidden = t.files.length === 0;
+                status.textContent = t.files.length ? `Foto subida` : 'Foto subida';
+            }
+        }
+
+        // Mark preview when a remove checkbox is toggled
+        if (t.classList.contains('remove-image-checkbox')) {
+            const img = t.closest('div').querySelector('img.img-preview');
+            if (img) img.classList.toggle('to-remove', t.checked);
+        }
+    });
+
+    // Client-side guard for large total upload size
+    document.getElementById('survey-form').addEventListener('submit', function (ev) {
+        const MAX_BYTES = 20 * 1024 * 1024; // 20MB
+        let total = 0;
+        document.querySelectorAll('input[type=file]').forEach((inp) => {
+            for (let i = 0; i < inp.files.length; i++) total += inp.files[i].size;
+        });
+        if (total > MAX_BYTES) {
+            ev.preventDefault();
+            alert('El total de archivos seleccionados supera 20MB. Reduce el número o tamaño de imágenes, o adjusta el límite en el servidor.');
+            return;
+        }
+
+        if (typeof uploadsInProgress !== 'undefined' && uploadsInProgress > 0) {
+            ev.preventDefault();
+            alert('Aún se están subiendo imágenes. Espera unos segundos y vuelve a intentarlo.');
+            return;
+        }
+
+        document.querySelectorAll('input[type=file]').forEach((inp) => {
+            if (inp.classList.contains('question-image-input')) {
+                const m = inp.name.match(/questions\[(.*?)\]\[question_images\]/);
+                if (m) {
+                    const q = m[1];
+                    if (document.querySelector(`input[name="questions[${q}][question_images_urls][]"]`)) {
+                        inp.disabled = true;
+                    }
+                }
+            }
+            if (inp.classList.contains('option-file-input')) {
+                const m = inp.name.match(/questions\[(.*?)\]\[option_images\]\[(\d+)\]/);
+                if (m) {
+                    const q = m[1];
+                    const opt = m[2];
+                    if (document.querySelector(`input[name="questions[${q}][option_images_urls][${opt}]"]`)) {
+                        inp.disabled = true;
+                    }
+                }
+            }
+        });
+    });
+
+    // Client-side validation for dynamic questions: ensure `text` and `type` exist
+    document.getElementById('survey-form').addEventListener('submit', function (ev) {
+        const questionContainers = Array.from(document.querySelectorAll('#questions > .question-card'));
+        const missing = [];
+        let firstInvalid = null;
+        questionContainers.forEach((card, idx) => {
+            const text = card.querySelector('input[name*="[text]"]')?.value?.trim() || '';
+            const type = card.querySelector('select[name*="[type]"]')?.value || '';
+            if (!text) {
+                missing.push(`Pregunta ${idx + 1}: falta texto`);
+                if (!firstInvalid) firstInvalid = card.querySelector('input[name*="[text]"]');
+            }
+            if (!type) {
+                missing.push(`Pregunta ${idx + 1}: falta tipo`);
+                if (!firstInvalid) firstInvalid = card.querySelector('select[name*="[type]"]');
+            }
+        });
+        if (missing.length) {
+            ev.preventDefault();
+            alert('Corrige las preguntas antes de guardar:\n- ' + missing.join('\n- '));
+            if (firstInvalid) firstInvalid.focus();
+            return false;
+        }
+    });
+
+    // Toggle question image controls and option image containers, and show previews
+    document.addEventListener('click', (e) => {
+        const questionButton = e.target.closest('.add-question-images-btn');
+        if (questionButton) {
+            const q = questionButton.dataset.questionIndex;
+            const ctrl = document.querySelector(`.question-image-controls[data-question-index="${q}"]`);
+            if (ctrl) ctrl.hidden = !ctrl.hidden;
+            return;
+        }
+
+        const optionButton = e.target.closest('.add-image-btn');
+        if (optionButton) {
+            const q = optionButton.dataset.questionIndex;
+            const opt = optionButton.dataset.optionIndex;
+            const container = document.querySelector(`.option-image-container[data-question-index="${q}"][data-option-index="${opt}"]`);
+            if (container) {
+                container.hidden = !container.hidden;
+                if (!container.hidden) {
+                    const input = container.querySelector('.option-file-input');
+                    if (input) input.click();
+                }
+            }
+            return;
+        }
+    });
+
+    document.addEventListener('change', (e) => {
+        const t = e.target;
+        if (t.classList.contains('question-image-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[question_images\]/);
+            if (!m) return;
+            const q = m[1];
+            const previews = document.querySelector(`.question-image-controls[data-question-index="${q}"] .image-previews`);
+            if (!previews) return;
+            previews.innerHTML = '';
+            for (let i = 0; i < t.files.length; i++) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(t.files[i]);
+                img.className = 'img-preview';
+                previews.appendChild(img);
+            }
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            // remove previous hidden url inputs for this question
+            document.querySelectorAll(`input[name^="questions[${q}][question_images_urls]"]`).forEach(n => n.remove());
+            (async () => {
+                uploadsInProgress++;
+                try {
+                    for (let i = 0; i < t.files.length; i++) {
+                        const fd = new FormData(); fd.append('image', t.files[i]);
+                        const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
+                        if (!res.ok) continue;
+                        const json = await res.json();
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `questions[${q}][question_images_urls][]`;
+                        input.value = json.url;
+                        document.getElementById('survey-form').appendChild(input);
+                    }
+                } finally { uploadsInProgress--; }
+            })();
+        }
+
+        if (t.classList.contains('option-file-input')) {
+            const m = t.name.match(/questions\[(.*?)\]\[option_images\]\[(\d+)\]/);
+            if (!m) return;
+            const q = m[1];
+            const opt = m[2];
+            const previews = document.querySelector(`.option-image-container[data-question-index="${q}"][data-option-index="${opt}"] .image-previews`);
+            if (!previews) return;
+            previews.innerHTML = '';
+            if (t.files.length) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(t.files[0]);
+                img.className = 'img-preview';
+                previews.appendChild(img);
+            }
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            (async () => {
+                uploadsInProgress++;
+                try {
+                    const fd = new FormData(); fd.append('image', t.files[0]);
+                    const res = await fetch('{{ route('admin.upload_image') }}', { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': token } });
+                    if (!res.ok) return;
+                    const json = await res.json();
+                    document.querySelectorAll(`input[name="questions[${q}][option_images_urls][${opt}]"]`).forEach(n=>n.remove());
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `questions[${q}][option_images_urls][${opt}]`;
+                    input.value = json.url;
+                    document.getElementById('survey-form').appendChild(input);
+                } finally { uploadsInProgress--; }
+            })();
+        }
+    });
+</script>
+@endpush
