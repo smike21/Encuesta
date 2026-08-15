@@ -7,6 +7,7 @@ use App\Models\Survey;
 use App\Models\SurveySubmission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -52,6 +53,7 @@ class SurveyController extends Controller
         ]);
         $submission = SurveySubmission::create([
             'survey_id' => $survey->id,
+            'user_id' => Auth::id(),
             'ip_address' => $request->ip(),
             'latitude' => $survey->collect_location ? ($data['latitude'] ?? null) : null,
             'longitude' => $survey->collect_location ? ($data['longitude'] ?? null) : null,
