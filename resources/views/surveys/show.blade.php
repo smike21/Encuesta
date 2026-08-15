@@ -9,13 +9,13 @@
     </div>
 </div>
 
-<form method="post" action="{{ route('surveys.submit',$survey) }}" style="background-color:{{ $survey->background_color ?: 'var(--cream)' }}; color:{{ $survey->text_color ?: 'var(--ink)' }}; font-family:{{ $survey->font_family ?: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" }}; font-size:{{ $survey->font_size ?: '16px' }}; border-radius:24px; padding:1rem;">
+<form method="post" action="{{ route('surveys.submit',$survey) }}" style="background-color:{{ $survey->background_color ?: 'var(--cream)' }}; color:{{ $survey->text_color ?: 'var(--ink)' }}; font-[...]"
     @csrf
     <input type="hidden" name="timezone" id="timezone">
     <input type="hidden" name="locale" id="locale">
 
     @if(($survey->show_title ?? true) && ($survey->welcome_title || $survey->welcome_text))
-        <div class="card mb-4" style="border-color:{{ $survey->primary_color ?: '#1e5bb0' }}; background-color:{{ $survey->background_color ?: '#f6f8fb' }}; color:{{ $survey->text_color ?: '#102a44' }};">
+        <div class="card mb-4" style="border-color:{{ $survey->primary_color ?: '#1e5bb0' }}; background-color:{{ $survey->background_color ?: '#f6f8fb' }}; color:{{ $survey->text_color ?: '#102a4[...] }}">
             <div class="card-body">
                 @if($survey->welcome_title)
                     <h1 style="color:{{ $survey->primary_color ?: '#1e5bb0' }};">{{ $survey->welcome_title }}</h1>
@@ -28,7 +28,7 @@
     @endif
 
     @if($survey->collect_location)
-        <section class="card mb-3" style="background-color:{{ $survey->background_color ?: '#f4f6f8' }}; color:{{ $survey->text_color ?: '#102a44' }}; border-color:{{ $survey->primary_color ?: '#1e5bb0' }};">
+        <section class="card mb-3" style="background-color:{{ $survey->background_color ?: '#f4f6f8' }}; color:{{ $survey->text_color ?: '#102a44' }}; border-color:{{ $survey->primary_color ?: '#1[...]">
             <div class="card-body">
                 <h2 class="h5">Compartir ubicación (opcional)</h2>
                 <button type="button" class="btn btn-outline-primary" id="locate">Obtener mi ubicación</button>
@@ -48,16 +48,16 @@
             <div style="height:8px; background:#d7dce4; border-radius:999px; overflow:hidden;">
                 <div id="progress-bar-fill" style="height:100%; width:0%; background:{{ $survey->primary_color ?: '#1e5bb0' }}; transition: width .4s ease;"></div>
             </div>
-            <div id="progress-complete-msg" class="text-center mt-2" style="display:none; color:{{ $survey->primary_color ?: '#1e5bb0' }}; font-weight:600; opacity:0; transition: opacity .4s ease;">
+            <div id="progress-complete-msg" class="text-center mt-2" style="display:none; color:{{ $survey->primary_color ?: '#1e5bb0' }}; font-weight:600; opacity:0; transition: opacity .4s ease;[...]">
                 🎉 ¡Todo listo para enviar!
             </div>
         </div>
     @endif
 
     @foreach($survey->questions as $question)
-        <section class="card mb-3" data-question style="border-color:{{ $survey->primary_color ?: '#1e5bb0' }}; background-color:{{ $survey->background_color ?: '#f4f6f8' }}; color:{{ $survey->text_color ?: '#102a44' }};">
+        <section class="card mb-3" data-question style="border-color:{{ $survey->primary_color ?: '#1e5bb0' }}; background-color:{{ $survey->background_color ?: '#f4f6f8' }}; color:{{ $survey->tex[...] }}">
             <div class="card-body">
-                <label class="form-label fw-bold">{{ $question->text }}</label>
+                <label class="form-label fw-bold">{!! nl2br(e($question->text)) !!}</label>
 
                 @php
                     $imageSizeClass = match ($question->image_size ?? 'medium') {
@@ -70,7 +70,7 @@
                 @if(!empty($question->question_images))
                     <div class="question-media-grid">
                         @foreach($question->question_images as $imagePath)
-                            <img src="{{ str_starts_with($imagePath, 'data:') || str_starts_with($imagePath, 'http') || str_starts_with($imagePath, '/') ? $imagePath : Storage::disk('public')->url($imagePath) }}" alt="Imagen de pregunta" class="question-media-item {{ $imageSizeClass }}">
+                            <img src="{{ str_starts_with($imagePath, 'data:') || str_starts_with($imagePath, 'http') || str_starts_with($imagePath, '/') ? $imagePath : Storage::disk('public')->url[...] }}"
                         @endforeach
                     </div>
                 @endif
@@ -84,9 +84,9 @@
                     @foreach($question->options ?? [] as $index => $option)
                         <div class="form-check option-choice-row">
                             @if($question->allow_multiple)
-                                <input class="form-check-input multiple-choice-input" type="checkbox" name="answers[{{ $question->id }}][]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" data-max-selections="{{ $question->max_selections ?? 1 }}">
+                                <input class="form-check-input multiple-choice-input" type="checkbox" name="answers[{{ $question->id }}][]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index[...] }}">
                             @else
-                                <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" {{ $question->is_required ? 'required' : '' }}>
+                                <input class="form-check-input" type="radio" name="answers[{{ $question->id }}]" value="{{ $option }}" id="q{{ $question->id }}o{{ $index }}" {{ $question->is_requi[...] }}>
                             @endif
                             <label class="form-check-label" for="q{{ $question->id }}o{{ $index }}">{{ $option }}</label>
                             @if(!empty($question->option_images[$index] ?? null))
@@ -128,7 +128,7 @@
     @endforeach
 
     @if(($survey->show_submit_button ?? true))
-        <button class="btn btn-primary btn-lg" style="background:{{ $survey->primary_color ?: '#1e5bb0' }}; border-color:{{ $survey->primary_color ?: '#1e5bb0' }};">{{ $survey->button_text ?: 'Enviar respuestas' }}</button>
+        <button class="btn btn-primary btn-lg" style="background:{{ $survey->primary_color ?: '#1e5bb0' }}; border-color:{{ $survey->primary_color ?: '#1e5bb0' }};">{{ $survey->button_text ?: 'En[...]' }}</button>
     @endif
 </form>
 @endsection
