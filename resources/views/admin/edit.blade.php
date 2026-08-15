@@ -625,11 +625,12 @@
         const missing = [];
         let firstInvalid = null;
         questionContainers.forEach((card, idx) => {
-            const text = card.querySelector('input[name*="[text]"]')?.value?.trim() || '';
+            const textField = card.querySelector('input[name*="[text]"], textarea[name*="[text]"]');
+            const text = textField?.value?.trim() || '';
             const type = card.querySelector('select[name*="[type]"]')?.value || '';
             if (!text) {
                 missing.push(`Pregunta ${idx + 1}: falta texto`);
-                if (!firstInvalid) firstInvalid = card.querySelector('input[name*="[text]"]');
+                if (!firstInvalid) firstInvalid = textField;
             }
             if (!type) {
                 missing.push(`Pregunta ${idx + 1}: falta tipo`);
