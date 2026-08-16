@@ -5,11 +5,12 @@
 @section('content')
     <div class="results-actions">
         <a href="{{ route('admin.dashboard') }}">← Volver al panel</a>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
             @php $locationCount = $survey->submissions->whereNotNull('latitude')->whereNotNull('longitude')->count(); @endphp
             @if($locationCount > 0)
                 <button type="button" class="btn btn-outline-primary" id="show-map-btn">Mostrar mapa de ubicaciones</button>
             @endif
+            <button type="button" class="btn btn-outline-warning" id="show-ip-summary-btn">Ver IPs repetidas</button>
             <button type="button" class="btn btn-outline-secondary" id="show-surveyor-counts-btn">Ver conteo por encuestador de hoy</button>
             <a class="btn btn-primary" href="{{ route('admin.export', $survey) }}">Descargar resultados en Excel</a>
         </div>
@@ -19,6 +20,11 @@
         <div class="section-title"><span class="eyebrow">Mapa de ubicaciones</span><h2>Ubicaciones marcadas por los participantes</h2></div>
         <div class="map-status text-muted small mb-2">Haz clic en el botón para cargar el mapa.</div>
         <div id="results-map" style="width:100%; min-height:420px; border:1px solid #ddd; border-radius:12px;"></div>
+    </div>
+
+    <div id="ip-summary-wrapper" class="mb-4" style="display:none;">
+        <div class="section-title"><span class="eyebrow">IPs</span><h2>Direcciones IP registradas por respuesta</h2></div>
+        <div id="ipSummaryContainer"></div>
     </div>
 
     <div id="surveyor-counts-wrapper" class="mb-4" style="display:none;">
@@ -104,6 +110,7 @@
                 'lat' => $submission->latitude,
                 'lng' => $submission->longitude,
                 'label' => $submission->created_at->timezone('America/Lima')->format('d/m/Y H:i'),
+                'ip_address' => $submission->ip_address ?? 'No disponible',
                 'url' => 'https://www.google.com/maps/search/?api=1&query=' . $submission->latitude . ',' . $submission->longitude,
             ];
         })
@@ -117,6 +124,79 @@
 <script src="{{ asset('js/results-map.js') }}"></script>
 <script>
     (function () {
+        function escapeHtml(value) {
+            value = String(value ?? '');
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        var ipButton = document.getElementById('show-ip-summary-btn');
+        var ipWrapper = document.getElementById('ip-summary-wrapper');
+        var ipContainer = document.getElementById('ipSummaryContainer');
+        if (ipButton && ipWrapper && ipContainer) {
+            var ipUrl = @json(route('admin.ip_summary', $survey));
+            var ipLoaded = false;
+
+            function renderIpSpinner() {
+                ipContainer.innerHTML = '<div class="text-muted small py-3">Cargando direcciones IP…</div>';
+            }
+
+            function renderIpError(message) {
+                ipContainer.innerHTML = '<div class="alert alert-danger">' + (message || 'No se pudieron cargar los IPs.') + '</div>';
+            }
+
+            function renderIpTable(rows) {
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    ipContainer.innerHTML = '<div class="text-muted small py-3">No hay IPs registradas para esta encuesta.</div>';
+                    return;
+                }
+
+                var html = '<table class="table table-bordered table-striped">';
+                html += '<thead><tr><th>IP</th><th>Veces repetida</th></tr></thead><tbody>';
+                rows.forEach(function (row) {
+                    var ip = row.ip_address != null ? String(row.ip_address) : 'No disponible';
+                    var count = row.count != null ? row.count : 0;
+                    html += '<tr>'
+                        + '<td>' + escapeHtml(ip) + '</td>'
+                        + '<td>' + escapeHtml(String(count)) + '</td>'
+                        + '</tr>';
+                });
+                html += '</tbody></table>';
+                ipContainer.innerHTML = html;
+            }
+
+            function loadIpSummary() {
+                renderIpSpinner();
+                fetch(ipUrl, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                })
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        renderIpTable(data);
+                    })
+                    .catch(function () {
+                        renderIpError();
+                    });
+            }
+
+            ipButton.addEventListener('click', function () {
+                var isHidden = ipWrapper.style.display === 'none' || !ipWrapper.style.display;
+                ipWrapper.style.display = isHidden ? 'block' : 'none';
+                if (isHidden && !ipLoaded) {
+                    ipLoaded = true;
+                    loadIpSummary();
+                }
+            });
+        }
+
         var button = document.getElementById('show-surveyor-counts-btn');
         var wrapper = document.getElementById('surveyor-counts-wrapper');
         var container = document.getElementById('surveyorCountsContainer');
@@ -153,15 +233,6 @@
             });
             html += '</tbody></table>';
             container.innerHTML = html;
-        }
-
-        function escapeHtml(value) {
-            return value
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
         }
 
         function loadCounts() {

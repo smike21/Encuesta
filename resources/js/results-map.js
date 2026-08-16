@@ -44,11 +44,13 @@ function initResultsMap() {
 
     const markers = submissionLocations.map((item) => {
         const marker = L.marker([item.lat, item.lng]).addTo(map);
-        let popupHtml = '<strong>Envío:</strong> ' + item.label;
+        const ipText = item.ip_address ? String(item.ip_address) : 'IP no disponible';
+        let popupHtml = '<strong>Envío:</strong> ' + item.label + '<br><strong>IP:</strong> ' + ipText;
         if (item.url) {
             popupHtml += '<br><a href="' + item.url + '" target="_blank" rel="noreferrer">Ver en Google Maps</a>';
         }
         marker.bindPopup(popupHtml);
+        marker.bindTooltip('<strong>IP:</strong> ' + ipText, { direction: 'top', opacity: 0.95 });
         return marker;
     });
 

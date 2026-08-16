@@ -329,6 +329,28 @@ class AdminController extends Controller
 
         return response()->json($result);
     }
+
+    public function ipSummary(Survey $survey)
+    {
+        $this->guard();
+
+        $rows = DB::table('survey_submissions')
+            ->where('survey_id', $survey->id)
+            ->whereNotNull('ip_address')
+            ->where('ip_address', '!=', '')
+            ->select('ip_address', DB::raw('COUNT(*) as count'))
+            ->groupBy('ip_address')
+            ->orderByDesc('count')
+            ->orderBy('ip_address')
+            ->get();
+
+        return response()->json($rows->map(function ($row) {
+            return [
+                'ip_address' => $row->ip_address,
+                'count' => (int) $row->count,
+            ];
+        })->values());
+    }
     public function surveyors(): View
     {
         $this->guard();
