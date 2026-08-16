@@ -11,6 +11,7 @@
                 <button type="button" class="btn btn-outline-primary" id="show-map-btn">Mostrar mapa de ubicaciones</button>
             @endif
             <button type="button" class="btn btn-outline-secondary" id="show-surveyor-counts-btn">Ver conteo por encuestador de hoy</button>
+            <button type="button" class="btn btn-outline-secondary" id="show-ip-counts-btn">Ver IPs y frecuencia</button>
             <a class="btn btn-primary" href="{{ route('admin.export', $survey) }}">Descargar resultados en Excel</a>
         </div>
     </div>
@@ -24,6 +25,11 @@
     <div id="surveyor-counts-wrapper" class="mb-4" style="display:none;">
         <div class="section-title"><span class="eyebrow">Encuestadores</span><h2>Conteo de respuestas por encuestador (hoy)</h2></div>
         <div id="surveyorCountsContainer"></div>
+    </div>
+
+    <div id="ip-counts-wrapper" class="mb-4" style="display:none;">
+        <div class="section-title"><span class="eyebrow">IPs</span><h2>Conteo de respuestas por dirección IP</h2></div>
+        <div id="ipCountsContainer"></div>
     </div>
 
     <div class="results-heading">
@@ -148,6 +154,85 @@
                 html += '<tr>'
                     + '<td>' + escapeHtml(name) + '</td>'
                     + '<td>' + escapeHtml(email) + '</td>'
+                    + '<td>' + escapeHtml(String(count)) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(value) {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function loadCounts() {
+            renderSpinner();
+            fetch(countsUrl, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(function (data) {
+                    renderTable(data);
+                })
+                .catch(function () {
+                    renderError();
+                });
+        }
+
+        button.addEventListener('click', function () {
+            var isHidden = wrapper.style.display === 'none' || !wrapper.style.display;
+            wrapper.style.display = isHidden ? 'block' : 'none';
+            if (isHidden && !loaded) {
+                loaded = true;
+                loadCounts();
+            }
+        });
+    })();
+</script>
+<script>
+    (function () {
+        var button = document.getElementById('show-ip-counts-btn');
+        var wrapper = document.getElementById('ip-counts-wrapper');
+        var container = document.getElementById('ipCountsContainer');
+        if (!button || !wrapper || !container) return;
+
+        var countsUrl = @json(route('admin.ip_counts', $survey));
+        var loaded = false;
+
+        function renderSpinner() {
+            container.innerHTML = '<div class="text-muted small py-3">Cargando conteo de IPs…</div>';
+        }
+
+        function renderError(message) {
+            container.innerHTML = '<div class="alert alert-danger">' + (message || 'Ocurrió un error al cargar el conteo por IP. Intenta nuevamente.') + '</div>';
+        }
+
+        function renderTable(rows) {
+            if (!Array.isArray(rows) || rows.length === 0) {
+                container.innerHTML = '<div class="text-muted small py-3">No hay respuestas registradas para esta encuesta.</div>';
+                return;
+            }
+
+            var sorted = rows.slice().sort(function (a, b) {
+                return (b.count || 0) - (a.count || 0);
+            });
+
+            var html = '<table class="table table-bordered table-striped">';
+            html += '<thead><tr><th>Dirección IP</th><th>Número de respuestas</th></tr></thead><tbody>';
+            sorted.forEach(function (row) {
+                var ip = row.ip_address != null ? String(row.ip_address) : 'Sin registro';
+                var count = row.count != null ? row.count : 0;
+                html += '<tr>'
+                    + '<td>' + escapeHtml(ip) + '</td>'
                     + '<td>' + escapeHtml(String(count)) + '</td>'
                     + '</tr>';
             });

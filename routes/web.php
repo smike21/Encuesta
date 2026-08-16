@@ -30,6 +30,8 @@ Route::get('/admin/encuestas/{survey}/resultados', [AdminController::class, 'res
 Route::get('/admin/encuestas/{survey}/exportar', [AdminController::class, 'export'])->name('admin.export');
 // Nuevo endpoint: conteo de respuestas por encuestador (JSON)
 Route::get('/admin/encuestas/{survey}/counts-by-surveyor', [AdminController::class, 'surveyorCounts'])->name('admin.surveyor_counts');
+// Nuevo endpoint: conteo de respuestas por IP (JSON)
+Route::get('/admin/encuestas/{survey}/counts-by-ip', [AdminController::class, 'ipCounts'])->name('admin.ip_counts');
 Route::patch('/admin/encuestas/{survey}/estado', [AdminController::class, 'toggle'])->name('admin.toggle');
 Route::delete('/admin/encuestas/{survey}', [AdminController::class, 'destroy'])->name('admin.destroy');
 Route::get('/admin/setup', [AdminController::class, 'setup'])->name('admin.setup');
