@@ -1,0 +1,3 @@
+@extends('layouts.app') @section('title','Encuestas disponibles') @section('content')
+<div class="mb-5"><h1>Encuestas disponibles</h1><p>Tu opinión es importante. Participa en nuestras encuestas.</p></div><div class="row g-4">@forelse($surveys as $survey)<div class="col-md-6 col-lg-4"><article class="card h-100"><div class="card-body"><h2 class="h5">{{ $survey->title }}</h2><p>{{ $survey->description ?: 'Sin descripción' }}</p><small>{{ $survey->questions_count }} preguntas</small></div><div class="card-footer"><a class="btn btn-primary" href="{{ route('surveys.show',$survey) }}">Responder</a></div></article></div>@empty <p class="text-muted">No hay encuestas disponibles en este momento.</p>@endforelse</div>
+@endsection

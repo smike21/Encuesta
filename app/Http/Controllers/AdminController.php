@@ -1,0 +1,409 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Survey;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Log;
+
+class AdminController extends Controller
+{
+    private function guard(): void { abort_unless(Auth::check() && Auth::user()->is_admin, 403); }
+
+    private function storeUploadedImages(array $files): array
+    {
+        return collect($files)->map(function ($file) {
+            if (! $file) return null;
+            return 'data:'.$file->getClientMimeType().';base64,'.base64_encode(file_get_contents($file->getRealPath()));
+        })->filter()->values()->all();
+    }
+    
+    public function uploadImage(Request $request)
+    {
+        $this->guard();
+        $request->validate(['image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],]);
+        $file = $request->file('image');
+        // Railway's container filesystem is ephemeral. Keeping this small image in
+        // the database makes it survive deploys and avoids broken /storage links.
+        $data = 'data:'.$file->getClientMimeType().';base64,'.base64_encode(file_get_contents($file->getRealPath()));
+        return response()->json(['url' => $data]);
+    }
+
+    public function loginForm(): View { $hasAdmin = User::where('is_admin', true)->exists(); return view('admin.login', compact('hasAdmin')); }
+    public function login(Request $request): RedirectResponse
+    {
+        $credentials = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
+        if (Auth::attempt($credentials + ['is_active' => true], $request->boolean('remember'))) { $request->session()->regenerate(); return redirect()->intended(Auth::user()->is_admin ? route('admin.dashboard') : route('surveyor.dashboard')); }
+        return back()->withErrors(['email' => 'Las credenciales no son válidas.'])->onlyInput('email');
+    }
+    public function logout(Request $request): RedirectResponse { Auth::logout(); $request->session()->invalidate(); $request->session()->regenerateToken(); return redirect()->route('admin.login'); }
+    public function dashboard(): View { $this->guard(); return view('admin.dashboard', ['surveys' => Survey::withCount(['questions', 'submissions'])->latest()->get()]); }
+    public function create(): View { $this->guard(); return view('admin.create'); }
+    public function edit(Survey $survey): View { $this->guard(); $survey->load('questions'); return view('admin.edit', compact('survey')); }
+    public function store(Request $request): RedirectResponse
+    {
+        $this->guard();
+        // Quick server-side guard against enormous multipart requests that would
+        // otherwise be truncated or cause PHP/DB errors. Adjust MAX_SURVEY_UPLOAD_BYTES in .env if needed.
+        $maxTotal = (int) env('MAX_SURVEY_UPLOAD_BYTES', 20 * 1024 * 1024);
+        $contentLength = (int) ($request->server('CONTENT_LENGTH') ?? 0);
+        if ($contentLength > 0 && $contentLength > $maxTotal) {
+            return back()->withErrors(['__form' => "El formulario supera el límite de tamaño ({$maxTotal} bytes). Reduce el número/tamaño de imágenes o aumenta post_max_size en PHP."])->withInput();
+        }
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'collect_location' => ['nullable', 'boolean'],
+            'welcome_title' => ['nullable', 'string', 'max:255'],
+            'welcome_text' => ['nullable', 'string'],
+            'thank_you_title' => ['nullable', 'string', 'max:255'],
+            'thank_you_text' => ['nullable', 'string'],
+            'primary_color' => ['nullable', 'string', 'max:20'],
+            'background_color' => ['nullable', 'string', 'max:20'],
+            'container_background_color' => ['nullable', 'string', 'max:20'],
+            'container_border_color' => ['nullable', 'string', 'max:20'],
+            'text_color' => ['nullable', 'string', 'max:20'],
+            'button_text' => ['nullable', 'string', 'max:255'],
+            'font_family' => ['nullable', 'string', 'max:255'],
+            'font_size' => ['nullable', 'string', 'max:20'],
+            'show_title' => ['nullable', 'boolean'],
+            'show_description' => ['nullable', 'boolean'],
+            'show_progress' => ['nullable', 'boolean'],
+            'show_submit_button' => ['nullable', 'boolean'],
+            'questions' => ['required', 'array', 'min:1'],
+            'questions.*.id' => ['nullable', 'integer'],
+            'questions.*.text' => ['required', 'string', 'max:500'],
+            'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
+            'questions.*.is_required' => ['nullable', 'boolean'],
+            'questions.*.allow_multiple' => ['nullable', 'boolean'],
+            'questions.*.max_selections' => ['nullable', 'integer', 'min:1'],
+            'questions.*.image_size' => ['nullable', 'in:small,medium,large'],
+            'questions.*.options' => ['nullable', 'array'],
+            'questions.*.options.*' => ['nullable', 'string', 'max:255'],
+            'questions.*.question_images' => ['nullable', 'array'],
+            'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.question_images_urls' => ['nullable', 'array'],
+            'questions.*.question_images_urls.*' => ['string', 'max:3000000'],
+            'questions.*.option_images' => ['nullable', 'array'],
+            'questions.*.option_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.option_images_urls' => ['nullable', 'array'],
+            'questions.*.option_images_urls.*' => ['string', 'max:3000000'],
+        ]);
+
+        $survey = Auth::user()->surveys()->create([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'collect_location' => $request->boolean('collect_location'),
+            'welcome_title' => $data['welcome_title'] ?? null,
+            'welcome_text' => $data['welcome_text'] ?? null,
+            'thank_you_title' => $data['thank_you_title'] ?? null,
+            'thank_you_text' => $data['thank_you_text'] ?? null,
+            'primary_color' => $data['primary_color'] ?? null,
+            'background_color' => $data['background_color'] ?? null,
+            'container_background_color' => $data['container_background_color'] ?? null,
+            'container_border_color' => $data['container_border_color'] ?? null,
+            'text_color' => $data['text_color'] ?? null,
+            'button_text' => $data['button_text'] ?? null,
+            'font_family' => $data['font_family'] ?? null,
+            'font_size' => $data['font_size'] ?? null,
+            'show_title' => $request->boolean('show_title', true),
+            'show_description' => $request->boolean('show_description', true),
+            'show_progress' => $request->boolean('show_progress', true),
+            'show_submit_button' => $request->boolean('show_submit_button', true),
+        ]);
+
+        $position = 0;
+        foreach ($data['questions'] as $questionKey => $question) {
+            $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
+            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$questionKey}.allow_multiple");
+
+            // Support async-uploaded URLs: prefer `question_images_urls` / `option_images_urls` if provided
+            $questionImages = [];
+            if (!empty($question['question_images_urls'] ?? null)) {
+                $questionImages = array_values(array_filter($question['question_images_urls']));
+            } elseif (!empty($question['question_images'] ?? null)) {
+                $questionImages = $this->storeUploadedImages($question['question_images']);
+            }
+
+            $optionImages = [];
+            if (!empty($question['option_images_urls'] ?? null)) {
+                // maintain indexes (could be sparse)
+                $optionImages = array_values(array_filter($question['option_images_urls']));
+            } elseif (!empty($question['option_images'] ?? null)) {
+                $optionImages = $this->storeUploadedImages($question['option_images']);
+            }
+
+            $survey->questions()->create([
+                'text' => $question['text'],
+                'type' => $question['type'],
+                'is_required' => $request->boolean("questions.{$questionKey}.is_required"),
+                'allow_multiple' => $allowMultiple,
+                'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
+                'image_size' => $question['image_size'] ?? 'medium',
+                'options' => $options,
+                'question_images' => $questionImages,
+                'option_images' => $optionImages,
+                'position' => $position,
+            ]);
+            $position++;
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Encuesta creada exitosamente.');
+    }
+    public function update(Request $request, Survey $survey): RedirectResponse
+    {
+        $this->guard();
+        $maxTotal = (int) env('MAX_SURVEY_UPLOAD_BYTES', 20 * 1024 * 1024);
+        $contentLength = (int) ($request->server('CONTENT_LENGTH') ?? 0);
+        if ($contentLength > 0 && $contentLength > $maxTotal) {
+            return back()->withErrors(['__form' => "El formulario supera el límite de tamaño ({$maxTotal} bytes). Reduce el número/tamaño de imágenes o aumenta post_max_size en PHP."])->withInput();
+        }
+        // Debug: log incoming questions payload to help diagnose missing-new-question issue
+        try {
+            Log::debug('AdminController@update incoming questions payload', ['questions' => $request->input('questions')]);
+        } catch (\Throwable $e) {
+            // swallow logging errors in case logging is not writable in some environments
+        }
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'collect_location' => ['nullable', 'boolean'],
+            'welcome_title' => ['nullable', 'string', 'max:255'],
+            'welcome_text' => ['nullable', 'string'],
+            'thank_you_title' => ['nullable', 'string', 'max:255'],
+            'thank_you_text' => ['nullable', 'string'],
+            'primary_color' => ['nullable', 'string', 'max:20'],
+            'background_color' => ['nullable', 'string', 'max:20'],
+            'container_background_color' => ['nullable', 'string', 'max:20'],
+            'container_border_color' => ['nullable', 'string', 'max:20'],
+            'text_color' => ['nullable', 'string', 'max:20'],
+            'button_text' => ['nullable', 'string', 'max:255'],
+            'font_family' => ['nullable', 'string', 'max:255'],
+            'font_size' => ['nullable', 'string', 'max:20'],
+            'show_title' => ['nullable', 'boolean'],
+            'show_description' => ['nullable', 'boolean'],
+            'show_progress' => ['nullable', 'boolean'],
+            'show_submit_button' => ['nullable', 'boolean'],
+            'questions' => ['required', 'array', 'min:1'],
+            'questions.*.id' => ['nullable', 'integer'],
+            'questions.*.text' => ['required', 'string', 'max:500'],
+            'questions.*.type' => ['required', 'in:text,paragraph,multiple_choice,scale'],
+            'questions.*.is_required' => ['nullable', 'boolean'],
+            'questions.*.allow_multiple' => ['nullable', 'boolean'],
+            'questions.*.max_selections' => ['nullable', 'integer', 'min:1'],
+            'questions.*.image_size' => ['nullable', 'in:small,medium,large'],
+            'questions.*.options' => ['nullable', 'array'],
+            'questions.*.options.*' => ['nullable', 'string', 'max:255'],
+            'questions.*.question_images' => ['nullable', 'array'],
+            'questions.*.question_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.question_images_urls' => ['nullable', 'array'],
+            'questions.*.question_images_urls.*' => ['string', 'max:3000000'],
+            'questions.*.option_images' => ['nullable', 'array'],
+            'questions.*.option_images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'questions.*.option_images_urls' => ['nullable', 'array'],
+            'questions.*.option_images_urls.*' => ['string', 'max:3000000'],
+        ]);
+
+        $survey->update([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'collect_location' => $request->boolean('collect_location'),
+            'welcome_title' => $data['welcome_title'] ?? null,
+            'welcome_text' => $data['welcome_text'] ?? null,
+            'thank_you_title' => $data['thank_you_title'] ?? null,
+            'thank_you_text' => $data['thank_you_text'] ?? null,
+            'primary_color' => $data['primary_color'] ?? null,
+            'background_color' => $data['background_color'] ?? null,
+            'container_background_color' => $data['container_background_color'] ?? null,
+            'container_border_color' => $data['container_border_color'] ?? null,
+            'text_color' => $data['text_color'] ?? null,
+            'button_text' => $data['button_text'] ?? null,
+            'font_family' => $data['font_family'] ?? null,
+            'font_size' => $data['font_size'] ?? null,
+            'show_title' => $request->boolean('show_title', true),
+            'show_description' => $request->boolean('show_description', true),
+            'show_progress' => $request->boolean('show_progress', true),
+            'show_submit_button' => $request->boolean('show_submit_button', true),
+        ]);
+
+        // Update existing questions in place. Deleting and recreating them here
+        // would cascade-delete every answer already submitted for the survey.
+        $existingById = $survey->questions()->get()->keyBy(fn ($q) => (string) $q->id)->all();
+        $keptQuestionIds = [];
+
+        $position = 0;
+        foreach ($data['questions'] as $questionKey => $question) {
+            $questionId = isset($question['id']) ? (string) $question['id'] : null;
+            $existingQuestion = $questionId ? ($existingById[$questionId] ?? null) : null;
+            if ($questionId && ! $existingQuestion) abort(422, 'La pregunta que intentas editar no pertenece a esta encuesta.');
+            $options = $question['type'] === 'multiple_choice' ? collect($question['options'] ?? [])->map(fn ($value) => trim($value))->filter()->values()->all() : null;
+            $allowMultiple = $question['type'] === 'multiple_choice' && $request->boolean("questions.{$questionKey}.allow_multiple");
+
+            // Determine question images: prefer async-uploaded URLs, else uploaded files, else keep existing minus removals
+            $questionImages = $existingQuestion?->question_images ?? [];
+            if (!empty($question['question_images_urls'] ?? null)) {
+                $questionImages = array_values(array_unique(array_merge($questionImages, array_filter($question['question_images_urls']))));
+            } elseif (!empty($question['question_images'] ?? null)) {
+                $questionImages = array_values(array_unique(array_merge($questionImages, $this->storeUploadedImages($question['question_images']))));
+            }
+            $removeQ = $question['remove_question_images'] ?? [];
+            if (is_array($removeQ)) $questionImages = array_values(array_filter($questionImages, fn ($value, $index) => empty($removeQ[$index]), ARRAY_FILTER_USE_BOTH));
+
+            // Option images: accept URLs or files, otherwise keep existing minus removals
+            $optionImages = $existingQuestion?->option_images ?? [];
+            if (!empty($question['option_images_urls'] ?? null)) {
+                foreach ($question['option_images_urls'] as $index => $url) if ($url) $optionImages[$index] = $url;
+            } elseif (!empty($question['option_images'] ?? null)) {
+                foreach ($this->storeUploadedImages($question['option_images']) as $index => $image) $optionImages[$index] = $image;
+            }
+            $removeOpt = $question['remove_option_images'] ?? [];
+            if (is_array($removeOpt)) foreach ($removeOpt as $index => $remove) if ($remove) unset($optionImages[$index]);
+
+            $attributes = [
+                'text' => $question['text'],
+                'type' => $question['type'],
+                'is_required' => $request->boolean("questions.{$questionKey}.is_required"),
+                'allow_multiple' => $allowMultiple,
+                'max_selections' => $allowMultiple ? max(1, min((int) ($question['max_selections'] ?? 1), count($options ?? []))) : null,
+                'image_size' => $question['image_size'] ?? 'medium',
+                'options' => $options,
+                'question_images' => $questionImages,
+                'option_images' => $optionImages,
+                'position' => $position,
+            ];
+            if ($existingQuestion) {
+                $existingQuestion->update($attributes);
+                $keptQuestionIds[] = $existingQuestion->id;
+            } else {
+                $keptQuestionIds[] = $survey->questions()->create($attributes)->id;
+            }
+            $position++;
+        }
+        $survey->questions()->whereNotIn('id', $keptQuestionIds)->delete();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Encuesta actualizada exitosamente.');
+    }
+    public function results(Survey $survey): View { $this->guard(); $survey->load(['questions.answers', 'submissions']); return view('admin.results', compact('survey')); }
+
+    /**
+     * Devuelve un conteo (en JSON) de cuántas respuestas envió cada encuestador
+     * el día de hoy para la encuesta indicada. Se identifica al encuestador por
+     * el campo `user_id` de `survey_submissions`, ya que estos usuarios estaban
+     * autenticados al momento de responder.
+     */
+    public function surveyorCounts(Survey $survey)
+    {
+        $this->guard();
+
+        $rows = DB::table('survey_submissions')
+            ->leftJoin('users', 'users.id', '=', 'survey_submissions.user_id')
+            ->where('survey_submissions.survey_id', $survey->id)
+            ->whereRaw('DATE(survey_submissions.created_at) = CURDATE()')
+            ->select(
+                'survey_submissions.user_id',
+                'users.name as surveyor_name',
+                'users.email as surveyor_email',
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('survey_submissions.user_id', 'users.name', 'users.email')
+            ->orderByDesc('count')
+            ->get();
+
+        $result = $rows->map(function ($row) {
+            $isAnonymous = $row->user_id === null;
+            return [
+                'surveyor_name' => $isAnonymous ? 'Anónimo' : ($row->surveyor_name ?? 'Anónimo'),
+                'surveyor_email' => $isAnonymous ? '' : ($row->surveyor_email ?? ''),
+                'count' => (int) $row->count,
+            ];
+        })->sortByDesc('count')->values();
+
+        return response()->json($result);
+    }
+    public function surveyors(): View
+    {
+        $this->guard();
+        $surveyors = User::where('is_admin', false)->with(['assignedSurveys' => fn ($query) => $query->withCount('submissions')])->withCount('assignedSurveys')->orderBy('name')->get();
+        return view('admin.surveyors.index', compact('surveyors'));
+    }
+    public function showPasswordForm(): View
+    {
+        $this->guard();
+        return view('admin.password');
+    }
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $this->guard();
+        $request->validate([
+            'current_password' => ['required', 'string', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+        Auth::user()->update(['password' => $request->password]);
+        return redirect()->route('admin.dashboard')->with('success', 'Contraseña actualizada correctamente.');
+    }
+    public function createSurveyor(): View { $this->guard(); return view('admin.surveyors.create'); }
+    public function storeSurveyor(Request $request): RedirectResponse
+    {
+        $this->guard();
+        $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'max:255', 'unique:users,email'], 'password' => ['required', 'string', 'min:8', 'confirmed']]);
+        User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => $data['password'], 'is_admin' => false, 'is_active' => true]);
+        return redirect()->route('admin.surveyors')->with('success', 'Cuenta de encuestador creada.');
+    }
+    public function surveyorAccess(User $user): View
+    {
+        $this->guard(); abort_if($user->is_admin, 404);
+        return view('admin.surveyors.access', ['surveyor' => $user, 'surveys' => Survey::withCount('submissions')->latest()->get(), 'assignedIds' => $user->assignedSurveys()->pluck('surveys.id')->all()]);
+    }
+    public function updateSurveyorAccess(Request $request, User $user): RedirectResponse
+    {
+        $this->guard(); abort_if($user->is_admin, 404);
+        $data = $request->validate(['surveys' => ['nullable', 'array'], 'surveys.*' => ['integer', 'exists:surveys,id']]);
+        $user->assignedSurveys()->sync($data['surveys'] ?? []);
+        return redirect()->route('admin.surveyors')->with('success', 'Permisos de resultados actualizados.');
+    }
+    public function toggleSurveyor(User $user): RedirectResponse
+    {
+        $this->guard(); abort_if($user->is_admin, 404);
+        $user->update(['is_active' => ! $user->is_active]);
+        return back()->with('success', $user->is_active ? 'Cuenta habilitada.' : 'Cuenta inhabilitada.');
+    }
+    public function export(Survey $survey): StreamedResponse
+    {
+        $this->guard();
+        $survey->load(['questions', 'submissions.answers']);
+        $headers = ['N° respuesta', 'Fecha y hora Perú', 'Zona horaria local', 'País / zona', 'Ubicación'];
+        foreach ($survey->questions as $question) $headers[] = $question->text;
+        $filename = 'resultados-'.str($survey->title)->slug().'.xlsx';
+        return response()->streamDownload(function () use ($headers, $survey) {
+            $writer = new Writer();
+            $writer->openToFile('php://output');
+            $writer->getCurrentSheet()->setName('Resultados');
+            $writer->addRow(Row::fromValues($headers));
+            foreach ($survey->submissions as $index => $submission) {
+                $answerValues = $submission->answers->keyBy('question_id');
+                $row = [$index + 1, $submission->created_at->copy()->timezone('America/Lima')->format('Y-m-d H:i:s'), $submission->timezone ?: 'No registrada', $submission->countryLabel(), $submission->latitude !== null ? $submission->latitude.', '.$submission->longitude : 'No disponible'];
+                foreach ($survey->questions as $question) $row[] = $answerValues->get($question->id)?->value ?? '';
+                $writer->addRow(Row::fromValues($row));
+            }
+            $writer->close();
+        }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+    public function toggle(Survey $survey): RedirectResponse { $this->guard(); $survey->update(['is_active' => ! $survey->is_active]); return back()->with('success', 'Estado de la encuesta actualizado.'); }
+    public function destroy(Survey $survey): RedirectResponse { $this->guard(); $survey->delete(); return back()->with('success', 'Encuesta eliminada.'); }
+    public function setup(): RedirectResponse
+    {
+        abort_if(User::where('is_admin', true)->exists(), 403);
+        User::create(['name' => 'Administrador', 'email' => 'admin@encuestas.test', 'password' => Hash::make('admin123'), 'is_admin' => true]);
+        return redirect()->route('admin.login')->with('success', 'Admin creado: admin@encuestas.test / admin123. Cámbialo después de ingresar.');
+    }
+
+}
