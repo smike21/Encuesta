@@ -329,6 +329,32 @@ class AdminController extends Controller
 
         return response()->json($result);
     }
+
+    /**
+     * Devuelve un conteo (en JSON) de cuántas respuestas se recibieron desde
+     * cada dirección IP para la encuesta indicada. Sirve para ayudar a
+     * identificar qué IP corresponde a cada encuestador.
+     */
+    public function ipCounts(Survey $survey)
+    {
+        $this->guard();
+
+        $rows = DB::table('survey_submissions')
+            ->where('survey_id', $survey->id)
+            ->select('ip_address', DB::raw('COUNT(*) as count'))
+            ->groupBy('ip_address')
+            ->orderByDesc('count')
+            ->get();
+
+        $result = $rows->map(function ($row) {
+            return [
+                'ip_address' => $row->ip_address ?: 'Sin registro',
+                'count' => (int) $row->count,
+            ];
+        })->sortByDesc('count')->values();
+
+        return response()->json($result);
+    }
     public function surveyors(): View
     {
         $this->guard();
