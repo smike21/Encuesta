@@ -9,6 +9,7 @@
             @php $locationCount = $survey->submissions->whereNotNull('latitude')->whereNotNull('longitude')->count(); @endphp
             @if($locationCount > 0)
                 <button type="button" class="btn btn-outline-primary" id="show-map-btn">Mostrar mapa de ubicaciones</button>
+                <a class="btn btn-outline-success" href="{{ route('admin.export_kml', $survey) }}" download>Descargar mapa KML</a>
             @endif
             <button type="button" class="btn btn-outline-warning" id="show-ip-summary-btn">Ver IPs repetidas</button>
             <button type="button" class="btn btn-outline-secondary" id="show-surveyor-counts-btn">Ver conteo por encuestador de hoy</button>

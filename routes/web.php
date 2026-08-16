@@ -28,6 +28,7 @@ Route::get('/admin/encuestas/{survey}/editar', [AdminController::class, 'edit'])
 Route::put('/admin/encuestas/{survey}', [AdminController::class, 'update'])->name('admin.update');
 Route::get('/admin/encuestas/{survey}/resultados', [AdminController::class, 'results'])->name('admin.results');
 Route::get('/admin/encuestas/{survey}/exportar', [AdminController::class, 'export'])->name('admin.export');
+Route::get('/admin/encuestas/{survey}/exportar-kml', [AdminController::class, 'exportKml'])->name('admin.export_kml');
 Route::get('/admin/encuestas/{survey}/ip-summary', [AdminController::class, 'ipSummary'])->name('admin.ip_summary');
 // Nuevo endpoint: conteo de respuestas por encuestador (JSON)
 Route::get('/admin/encuestas/{survey}/counts-by-surveyor', [AdminController::class, 'surveyorCounts'])->name('admin.surveyor_counts');

@@ -419,6 +419,43 @@ class AdminController extends Controller
             $writer->close();
         }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
+
+    public function exportKml(Survey $survey)
+    {
+        $this->guard();
+
+        $survey->load('submissions');
+        $placemarks = $survey->submissions
+            ->filter(fn ($submission) => $submission->latitude !== null && $submission->longitude !== null)
+            ->values();
+
+        $filename = 'resultados-'.str($survey->title)->slug().'.kml';
+
+        $xml = [];
+        $xml[] = '<?xml version="1.0" encoding="UTF-8"?>';
+        $xml[] = '<kml xmlns="http://www.opengis.net/kml/2.2">';
+        $xml[] = '<Document>';
+        $xml[] = '<name>'.htmlspecialchars($survey->title, ENT_QUOTES, 'UTF-8').'</name>';
+
+        foreach ($placemarks as $index => $submission) {
+            $time = $submission->created_at?->timezone('America/Lima')->format('d/m/Y H:i') ?? 'Sin fecha';
+            $ip = $submission->ip_address ?: 'IP no disponible';
+            $description = '<![CDATA[<p><strong>Fecha:</strong> '.$time.'<br><strong>IP:</strong> '.htmlspecialchars($ip, ENT_QUOTES, 'UTF-8').'</p>]]>';
+            $xml[] = '<Placemark>';
+            $xml[] = '<name>'.htmlspecialchars('Respuesta '.($index + 1), ENT_QUOTES, 'UTF-8').'</name>';
+            $xml[] = '<description>'.$description.'</description>';
+            $xml[] = '<Point><coordinates>'.(float) $submission->longitude.','.(float) $submission->latitude.',0</coordinates></Point>';
+            $xml[] = '</Placemark>';
+        }
+
+        $xml[] = '</Document>';
+        $xml[] = '</kml>';
+
+        return response(implode("\n", $xml), 200, [
+            'Content-Type' => 'application/vnd.google-earth.kml+xml',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
     public function toggle(Survey $survey): RedirectResponse { $this->guard(); $survey->update(['is_active' => ! $survey->is_active]); return back()->with('success', 'Estado de la encuesta actualizado.'); }
     public function destroy(Survey $survey): RedirectResponse { $this->guard(); $survey->delete(); return back()->with('success', 'Encuesta eliminada.'); }
     public function setup(): RedirectResponse
